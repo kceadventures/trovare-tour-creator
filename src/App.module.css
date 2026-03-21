@@ -1,40 +1,28 @@
 
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f0f0f;color:#f0ede8;min-height:100vh}
-
-.app{max-width:480px;margin:0 auto;padding:0 0 80px}
-
+.app{max-width:480px;margin:0 auto;padding:0 0 100px}
 .topbar{padding:20px 20px 0;display:flex;align-items:center;justify-content:space-between}
 .wordmark{font-size:20px;font-weight:700;letter-spacing:-0.5px}
 .wordmark span{color:#1D9E75}
 .newBtn{background:none;border:1px solid #333;border-radius:8px;padding:6px 12px;font-size:12px;color:#666;cursor:pointer}
 .newBtn:hover{border-color:#555;color:#999}
-
 .phase{padding:20px}
 .phaseTitle{font-size:13px;font-weight:600;color:#1D9E75;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
 .phaseHead{font-size:26px;font-weight:700;color:#f0ede8;line-height:1.2;margin-bottom:8px;letter-spacing:-0.5px}
 .phaseSub{font-size:14px;color:#666;line-height:1.6;margin-bottom:28px}
-
-/* Big record button */
 .recWrap{display:flex;flex-direction:column;align-items:center;gap:20px;padding:20px 0}
 .bigBtn{width:120px;height:120px;border-radius:50%;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font-size:13px;font-weight:600;transition:transform .15s,box-shadow .2s}
 .bigBtn:active{transform:scale(.95)}
 .bigBtnGPS{background:#e55;color:#fff;box-shadow:0 0 0 0 rgba(229,85,85,.4)}
-.bigBtnGPS.active{box-shadow:0 0 0 12px rgba(229,85,85,.2),0 0 0 24px rgba(229,85,85,.1);animation:gpsRing 1.5s infinite}
+.bigBtnGPS.active{animation:gpsRing 1.5s infinite}
 @keyframes gpsRing{0%,100%{box-shadow:0 0 0 0 rgba(229,85,85,.4),0 0 0 0 rgba(229,85,85,.15)}50%{box-shadow:0 0 0 14px rgba(229,85,85,.15),0 0 0 28px rgba(229,85,85,0)}}
-.bigBtnAudio{background:#1D9E75;color:#fff;box-shadow:0 0 0 0 rgba(29,158,117,.4)}
-.bigBtnAudio.active{animation:audioRing 1s infinite}
-@keyframes audioRing{0%,100%{box-shadow:0 0 0 0 rgba(29,158,117,.5),0 0 0 0 rgba(29,158,117,.2)}50%{box-shadow:0 0 0 12px rgba(29,158,117,.2),0 0 0 24px rgba(29,158,117,0)}}
 .bigBtnIcon{font-size:32px;line-height:1}
 .bigBtnLabel{font-size:12px;font-weight:600;letter-spacing:.5px;text-transform:uppercase}
-
 .statusPill{padding:8px 16px;background:#1a1a1a;border-radius:20px;font-size:13px;color:#888;display:flex;align-items:center;gap:8px}
 .statusDot{width:8px;height:8px;border-radius:50%;background:#333;flex-shrink:0}
 .statusDot.green{background:#1D9E75;animation:blink 1.2s infinite}
-.statusDot.red{background:#e55;animation:blink .8s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-
-/* Map */
 .mapCard{margin:0 20px;background:#1a1a1a;border-radius:16px;overflow:hidden;border:1px solid #222}
 .mapEl{width:100%;height:220px}
 .mapStats{display:flex;gap:0;border-top:1px solid #222}
@@ -42,67 +30,60 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .mapStat:last-child{border-right:none}
 .mapStatVal{font-size:18px;font-weight:700;color:#f0ede8}
 .mapStatLabel{font-size:11px;color:#555;text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
-
-/* Stop markers */
-.markBtn{margin:16px 20px 0;width:calc(100% - 40px);padding:14px;background:#1a1a1a;border:1px dashed #333;border-radius:12px;color:#888;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .15s}
-.markBtn:hover{border-color:#1D9E75;color:#1D9E75}
-
-/* Stop list */
+.markBtn{margin:16px 20px 0;width:calc(100% - 40px);padding:14px;background:#1D9E75;border:none;border-radius:12px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .15s}
+.markBtn:hover{background:#0F6E56}
+.markBtnGhost{background:transparent;border:1px dashed #333;color:#555}
+.markBtnGhost:hover{border-color:#1D9E75;color:#1D9E75;background:transparent}
 .stops{padding:0 20px;margin-top:12px;display:flex;flex-direction:column;gap:8px}
 .stopPill{background:#1a1a1a;border:1px solid #222;border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:10px}
 .stopNum{width:24px;height:24px;border-radius:50%;background:#1D9E75;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .stopName{flex:1;font-size:14px;color:#f0ede8;font-weight:500}
 .stopCoord{font-size:11px;color:#444;font-family:monospace}
-
-/* Audio recording per stop */
-.audioStops{padding:0 20px;display:flex;flex-direction:column;gap:8px;margin-top:12px}
-.audioStop{background:#1a1a1a;border:1px solid #222;border-radius:12px;padding:14px 16px}
-.audioStopTop{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-.audioStopNum{width:24px;height:24px;border-radius:50%;background:#333;color:#888;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.audioStopName{flex:1;font-size:14px;color:#888}
-.audioStopName input{background:none;border:none;outline:none;font-size:14px;color:#f0ede8;font-family:inherit;width:100%}
-.audioStopName input::placeholder{color:#444}
-.recMini{width:32px;height:32px;border-radius:50%;border:none;background:#e55;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
-.recMini.done{background:#1D9E75}
-.recMini.recording{background:#e55;animation:miniPulse .8s infinite}
-@keyframes miniPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
-.recDur{font-size:11px;color:#e55;font-family:monospace;min-width:30px;text-align:center}
-.audioPlayerSmall{width:100%;margin-top:8px}
-
-/* AI Processing screen */
+.audioStops{padding:0 20px;display:flex;flex-direction:column;gap:12px;margin-top:4px}
+.audioStop{background:#1a1a1a;border:1px solid #222;border-radius:14px;padding:16px}
+.audioStopTop{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.audioStopNum{width:28px;height:28px;border-radius:50%;background:#1D9E75;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.stopNameInput{flex:1;background:none;border:none;outline:none;font-size:15px;font-weight:600;color:#f0ede8;font-family:inherit}
+.stopNameInput::placeholder{color:#444;font-weight:400}
+.recMini{width:36px;height:36px;border-radius:50%;border:none;background:#333;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;color:#888;transition:all .15s}
+.recMini:hover{background:#444}
+.recMini.recording{background:#e55;color:#fff;animation:miniPulse .8s infinite}
+.recMini.done{background:#1D9E75;color:#fff}
+@keyframes miniPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+.recDur{font-size:11px;color:#e55;font-family:monospace;min-width:32px;text-align:right}
+.audioPlayerSmall{width:100%;margin-top:2px;border-radius:8px}
+.mediaRow{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.mediaPill{padding:7px 13px;background:#222;border:1px solid #333;border-radius:20px;font-size:12px;color:#666;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .15s;position:relative;overflow:hidden;font-family:inherit}
+.mediaPill:hover{border-color:#555;color:#aaa}
+.mediaPill.hasMedia{border-color:#1D9E75;color:#1D9E75;background:#0a1f18}
+.mediaPill input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0}
+.mediaPreviewRow{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.mediaPreviewItem{position:relative;display:inline-block}
+.mediaPreviewItem .delBtn{position:absolute;top:-5px;right:-5px;width:18px;height:18px;border-radius:50%;background:#e55;border:none;color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1}
+.mediaThumb{width:64px;height:64px;border-radius:8px;object-fit:cover;border:1px solid #333;display:block}
+.videoThumb{width:64px;height:64px;border-radius:8px;background:#222;border:1px solid #333;display:flex;align-items:center;justify-content:center;font-size:22px}
+.addStopBtn{margin:12px 20px 0;width:calc(100% - 40px);padding:13px;background:transparent;border:1px dashed #2a2a2a;border-radius:12px;color:#444;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .15s}
+.addStopBtn:hover{border-color:#1D9E75;color:#1D9E75}
 .aiScreen{padding:40px 20px;text-align:center}
 .aiSpinner{width:64px;height:64px;border-radius:50%;border:3px solid #222;border-top-color:#1D9E75;animation:spin .8s linear infinite;margin:0 auto 24px}
 @keyframes spin{to{transform:rotate(360deg)}}
 .aiTitle{font-size:22px;font-weight:700;color:#f0ede8;margin-bottom:8px}
 .aiSub{font-size:14px;color:#666;line-height:1.6}
-.aiLog{margin-top:24px;text-align:left;background:#1a1a1a;border-radius:12px;padding:16px;font-size:12px;color:#555;font-family:monospace;line-height:1.8;max-height:200px;overflow-y:auto}
+.aiLog{margin-top:24px;text-align:left;background:#1a1a1a;border-radius:12px;padding:16px;font-size:12px;color:#444;font-family:monospace;line-height:2;max-height:200px;overflow-y:auto}
 .aiLogLine{color:#1D9E75}
-
-/* Results */
 .resultsScreen{padding:0 20px}
 .tourCard{background:#1a1a1a;border:1px solid #222;border-radius:16px;padding:20px;margin-bottom:12px}
-.tourTitle{font-size:20px;font-weight:700;color:#f0ede8;margin-bottom:6px}
-.tourMeta{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
-.tourTag{padding:4px 10px;background:#222;border-radius:20px;font-size:12px;color:#888}
-.tourDesc{font-size:14px;color:#888;line-height:1.7}
 .stopResult{background:#1a1a1a;border:1px solid #222;border-radius:12px;padding:16px;margin-bottom:8px}
-.stopResultNum{font-size:11px;color:#1D9E75;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
-.stopResultName{font-size:16px;font-weight:600;color:#f0ede8;margin-bottom:8px}
-.stopResultDesc{font-size:13px;color:#666;line-height:1.7}
+.stopResultNum{font-size:11px;color:#1D9E75;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
 .stopResultCoord{font-size:11px;color:#444;font-family:monospace;margin-top:8px}
-
-/* Action bar */
-.actionBar{position:fixed;bottom:0;left:0;right:0;padding:16px 20px;background:linear-gradient(transparent,#0f0f0f 40%);display:flex;gap:10px;max-width:480px;margin:0 auto}
-.actionBar{left:50%;transform:translateX(-50%);width:100%;max-width:480px}
+.actionBar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;padding:12px 20px 24px;background:linear-gradient(transparent,#0f0f0f 35%);display:flex;gap:10px}
 .btnMain{flex:1;padding:14px;background:#1D9E75;border:none;border-radius:12px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;transition:background .15s}
 .btnMain:hover{background:#0F6E56}
 .btnMain:disabled{opacity:.3;cursor:not-allowed}
 .btnSec{padding:14px 20px;background:#1a1a1a;border:1px solid #333;border-radius:12px;color:#888;font-size:14px;cursor:pointer}
 .btnSec:hover{border-color:#555;color:#aaa}
-
-/* edit overlay */
 .editField{margin-bottom:14px}
 .editField label{display:block;font-size:11px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
-.editField input,.editField textarea,.editField select{width:100%;padding:10px 12px;background:#222;border:1px solid #333;border-radius:8px;color:#f0ede8;font-size:13px;font-family:inherit;line-height:1.5}
+.editField input,.editField textarea,.editField select{width:100%;padding:10px 12px;background:#222;border:1px solid #2a2a2a;border-radius:8px;color:#f0ede8;font-size:13px;font-family:inherit;line-height:1.5}
 .editField input:focus,.editField textarea:focus,.editField select:focus{outline:none;border-color:#1D9E75}
 .editField textarea{resize:vertical}
