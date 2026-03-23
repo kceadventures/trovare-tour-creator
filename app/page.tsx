@@ -304,18 +304,33 @@ export default function Home() {
               </p>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
-              <Card
-                className="cursor-pointer transition-colors hover:border-primary"
-                onClick={() => setScreen('drop')}
-              >
-                <CardContent className="pt-6 text-center space-y-3">
-                  <div className="text-4xl">✦</div>
-                  <h2 className="text-lg font-semibold">AI-Assisted</h2>
-                  <p className="text-sm text-muted-foreground text-balance text-left">
-                    Drop your GPX, photos, audio, and notes. AI will organize everything into a complete tour.
-                  </p>
-                </CardContent>
-              </Card>
+              {(() => {
+                const aiDisabled = process.env.NEXT_PUBLIC_DISABLE_AI === 'true'
+                const aiDisabledReason = process.env.NEXT_PUBLIC_DISABLE_AI_REASON
+                return (
+                  <Card
+                    className={
+                      aiDisabled
+                        ? 'opacity-60 cursor-not-allowed'
+                        : 'cursor-pointer transition-colors hover:border-primary'
+                    }
+                    onClick={() => { if (!aiDisabled) setScreen('drop') }}
+                  >
+                    <CardContent className="pt-6 text-center space-y-3">
+                      <div className="text-4xl">✦</div>
+                      <h2 className="text-lg font-semibold">AI-Assisted</h2>
+                      <p className="text-sm text-muted-foreground text-balance text-left">
+                        Drop your GPX, photos, audio, and notes. AI will organize everything into a complete tour.
+                      </p>
+                      {aiDisabled && (
+                        <p className="text-xs text-yellow-500 bg-yellow-500/10 rounded px-2 py-1.5 text-left">
+                          {aiDisabledReason || 'AI-assisted generation is temporarily unavailable.'}
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+                )
+              })()}
               <Card
                 className="cursor-pointer transition-colors hover:border-primary"
                 onClick={handleStartManual}
