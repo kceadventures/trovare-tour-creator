@@ -1,34 +1,40 @@
 'use client'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Progress } from '@/components/ui/progress'
 
 interface Props {
   messages: string[]
   processing: boolean
+  progress: number
 }
 
-export function ProcessingLog({ messages, processing }: Props) {
+export function ProcessingLog({ messages, processing, progress }: Props) {
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2">
           {processing && (
             <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
           )}
-          Processing
+          {processing ? 'Building your tour...' : 'Processing complete'}
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <ul className="space-y-1 font-mono text-xs">
+      <CardContent className="space-y-4">
+        <div className="space-y-1.5">
+          <Progress value={progress} className="h-2" />
+          <p className="text-xs text-muted-foreground text-right">{progress}%</p>
+        </div>
+        <div className="bg-muted rounded-lg p-4 max-h-60 overflow-y-auto font-mono text-xs space-y-1">
           {messages.map((msg, i) => (
-            <li key={i} className="text-muted-foreground">
+            <div key={i} className="text-muted-foreground">
               {msg}
-            </li>
+            </div>
           ))}
           {processing && (
-            <li className="animate-pulse text-primary">...</li>
+            <div className="animate-pulse text-primary">...</div>
           )}
-        </ul>
+        </div>
       </CardContent>
     </Card>
   )

@@ -22,6 +22,7 @@ export default function Home() {
   const [tour, setTour] = useState<Tour | null>(null)
   const [tourProviders, setTourProviders] = useState<TourProvider[]>([])
   const [logMessages, setLogMessages] = useState<string[]>([])
+  const [processProgress, setProcessProgress] = useState(0)
   const [processing, setProcessing] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [publishing, setPublishing] = useState(false)
@@ -35,8 +36,8 @@ export default function Home() {
     if (!files.length) return
     setScreen('processing')
     setProcessing(true)
+    setProcessProgress(0)
     setLogMessages([])
-    addLog('Sending files to AI for processing…')
 
     try {
       const res = await fetch('/api/process', {
@@ -50,21 +51,42 @@ export default function Home() {
         throw new Error(body.error ?? `Process failed: ${res.statusText}`)
       }
 
-      const data = await res.json()
-      addLog('AI processing complete.')
+      const reader = res.body?.getReader()
+      if (!reader) throw new Error('No response stream')
 
-      setTour(data.tour)
-      setFiles(data.files ?? files)
-      setUnmatchedFiles(data.unmatchedFiles ?? [])
-      setTourProviders(data.tourProviders ?? [])
+      const decoder = new TextDecoder()
+      let buffer = ''
 
-      addLog(`Tour "${data.tour.title}" ready for review.`)
-      addLog(`${data.tour.stops.length} stops found.`)
-      if (data.unmatchedFiles?.length) {
-        addLog(`${data.unmatchedFiles.length} unmatched media file(s).`)
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() || ''
+
+        for (const line of lines) {
+          if (!line.trim()) continue
+          try {
+            const event = JSON.parse(line)
+            if (event.message) addLog(event.message)
+            if (event.progress !== undefined) setProcessProgress(event.progress)
+
+            if (event.type === 'done' && event.result) {
+              setTour(event.result.tour)
+              setFiles(event.result.files ?? files)
+              setUnmatchedFiles(event.result.unmatchedFiles ?? [])
+              setScreen('review')
+            }
+
+            if (event.type === 'error') {
+              addLog(`Error: ${event.message}`)
+            }
+          } catch {
+            // skip malformed lines
+          }
+        }
       }
-
-      setScreen('review')
     } catch (err) {
       addLog(`Error: ${err instanceof Error ? err.message : 'unknown error'}`)
     } finally {
@@ -134,6 +156,7 @@ export default function Home() {
     setTour(null)
     setTourProviders([])
     setLogMessages([])
+    setProcessProgress(0)
     setProcessing(false)
     setUploading(false)
     setPublishing(false)
@@ -186,7 +209,7 @@ export default function Home() {
         {/* Processing screen */}
         {screen === 'processing' && (
           <section className="space-y-4">
-            <ProcessingLog messages={logMessages} processing={processing} />
+            <ProcessingLog messages={logMessages} processing={processing} progress={processProgress} />
           </section>
         )}
 
