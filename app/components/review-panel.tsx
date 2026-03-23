@@ -545,7 +545,7 @@ export function ReviewPanel({
               <RoutePreview
                 routePoints={tour.routePoints}
                 stops={tour.stops
-                  .filter((s) => s.lat && s.lng)
+                  .filter((s) => s.lat !== 0 || s.lng !== 0)
                   .map((s, i) => ({ lat: s.lat, lng: s.lng, index: i, title: s.title }))}
               />
             </div>

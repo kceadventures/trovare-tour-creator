@@ -25,8 +25,9 @@ export function RoutePreview({ routePoints, stops }: RoutePreviewProps) {
 
   if (!allPoints.length) {
     return (
-      <div className="flex items-center justify-center rounded-md border border-dashed border-muted-foreground/25 h-[180px] text-xs text-muted-foreground">
-        No route data
+      <div className="flex flex-col items-center justify-center gap-1 rounded-md border border-dashed border-muted-foreground/25 h-[180px] text-xs text-muted-foreground">
+        <span>No route to preview</span>
+        <span className="text-muted-foreground/60">Upload a GPX file or add stop coordinates</span>
       </div>
     )
   }
