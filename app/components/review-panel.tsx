@@ -485,6 +485,9 @@ export function ReviewPanel({
             index={i}
             files={files}
             onUpdate={(updated) => updateStop(i, updated)}
+            onRemove={(stopId) => {
+              onTourUpdate({ ...tour, stops: tour.stops.filter((s) => s.id !== stopId) })
+            }}
             onRemoveMedia={onRemoveMedia}
             onReplaceImage={onReplaceImage}
             replacingImage={replacingImageStopId === stop.id}

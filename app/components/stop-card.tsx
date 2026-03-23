@@ -35,12 +35,13 @@ interface Props {
   index: number
   files: UploadedFile[]
   onUpdate: (updated: Stop) => void
+  onRemove: (stopId: string) => void
   onRemoveMedia: (stopId: string, category: 'image' | 'audio' | 'video') => void
   onReplaceImage: (stopId: string, file: File) => void
   replacingImage?: boolean
 }
 
-export function StopCard({ stop, index, files, onUpdate, onRemoveMedia, onReplaceImage, replacingImage }: Props) {
+export function StopCard({ stop, index, files, onUpdate, onRemove, onRemoveMedia, onReplaceImage, replacingImage }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [suggestOpen, setSuggestOpen] = useState(false)
   const [suggestion, setSuggestion] = useState('')
@@ -62,6 +63,14 @@ export function StopCard({ stop, index, files, onUpdate, onRemoveMedia, onReplac
             onChange={(e) => onUpdate({ ...stop, title: e.target.value })}
             className="h-8 flex-1 text-sm font-medium"
           />
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+            onClick={() => onRemove(stop.id)}
+          >
+            ×
+          </Button>
         </div>
       </CardHeader>
 
