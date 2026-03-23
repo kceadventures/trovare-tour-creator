@@ -64,12 +64,12 @@ export function StopCard({ stop, index, files, onUpdate, onRemove, onRemoveMedia
             className="h-8 flex-1 text-sm font-medium"
           />
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
-            className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+            className="h-7 shrink-0 text-xs text-destructive border-destructive/30 hover:bg-destructive hover:text-destructive-foreground"
             onClick={() => onRemove(stop.id)}
           >
-            ×
+            Remove stop
           </Button>
         </div>
       </CardHeader>
