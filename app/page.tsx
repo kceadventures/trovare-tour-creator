@@ -427,6 +427,16 @@ export default function Home() {
     setHistoryEntries([])
   }
 
+  const [savedNotice, setSavedNotice] = useState(false)
+
+  function handleSaveForLater() {
+    if (!tour) return
+    saveToHistory(tour, files, unmatchedFiles, true)
+    setHistoryEntries(loadHistory())
+    setSavedNotice(true)
+    setTimeout(() => setSavedNotice(false), 2000)
+  }
+
   function handleStartManual() {
     const emptyStop: Stop = {
       id: crypto.randomUUID(),
@@ -621,11 +631,25 @@ export default function Home() {
           <section className="space-y-6">
             {screen === 'review' && (
               <>
-                <div>
-                  <h1 className="text-2xl font-bold">Review Tour</h1>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Check and edit the generated tour before publishing.
-                  </p>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h1 className="text-2xl font-bold">Review Tour</h1>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Check and edit the generated tour before publishing.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {savedNotice && (
+                      <span className="text-xs text-primary animate-in fade-in">Saved!</span>
+                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSaveForLater}
+                    >
+                      Save for later
+                    </Button>
+                  </div>
                 </div>
                 <ReviewPanel
                   tour={tour}
