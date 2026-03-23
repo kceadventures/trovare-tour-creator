@@ -489,9 +489,12 @@ export default function Home() {
       {/* Header */}
       <header className="sticky top-0 z-10 border-b border-border bg-background/80 backdrop-blur">
         <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
-          <span className="font-heading text-base font-semibold tracking-tight">
+          <button
+            className="font-heading text-base font-semibold tracking-tight hover:opacity-70 transition-opacity"
+            onClick={handleReset}
+          >
             Trovare Tour Creator
-          </span>
+          </button>
           <div className="flex items-center gap-2">
             {screen === 'review' && (
               <>
