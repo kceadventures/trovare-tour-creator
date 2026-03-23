@@ -189,7 +189,7 @@ export function ReviewPanel({
           <div className="flex flex-col gap-1">
             <label className="text-xs text-muted-foreground">Region</label>
             <Select
-              value={tour.regionId || undefined}
+              value={tour.regionId || '__none__'}
               onValueChange={(v) => {
                 if (v === '__new__') {
                   setNewRegionOpen(true)
@@ -197,13 +197,15 @@ export function ReviewPanel({
                   setNewRegionDesc('')
                   setNewRegionLat('')
                   setNewRegionLng('')
+                } else if (v === '__none__') {
+                  onTourUpdate({ ...tour, regionId: '' })
                 } else if (v) {
                   onTourUpdate({ ...tour, regionId: v })
                 }
               }}
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select region">
+                <SelectValue>
                   {tour.regionId
                     ? (regions.find((r) => r._id === tour.regionId)?.title ?? 'Loading...')
                       + (tour.regionId.startsWith('drafts.') ? ' [pending]' : '')
@@ -211,6 +213,9 @@ export function ReviewPanel({
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="__none__" className="text-muted-foreground">
+                  No region
+                </SelectItem>
                 {regions.map((r) => (
                   <SelectItem key={r._id} value={r._id}>
                     {r.title}{r._id.startsWith('drafts.') ? ' [pending]' : ''}
@@ -303,7 +308,7 @@ export function ReviewPanel({
               Tour Provider
             </label>
             <Select
-              value={tour.tourProviderId || undefined}
+              value={tour.tourProviderId || '__none__'}
               onValueChange={(v) => {
                 if (v === '__new__') {
                   setNewProviderOpen(true)
@@ -311,13 +316,15 @@ export function ReviewPanel({
                   setNewProviderEmail('')
                   setNewProviderDesc('')
                   setNewProviderWebsite('')
+                } else if (v === '__none__') {
+                  onTourUpdate({ ...tour, tourProviderId: '' })
                 } else if (v) {
                   onTourUpdate({ ...tour, tourProviderId: v })
                 }
               }}
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select provider">
+                <SelectValue>
                   {tour.tourProviderId
                     ? (tourProviders.find((p) => p._id === tour.tourProviderId)?.title ?? 'Loading...')
                       + (tour.tourProviderId.startsWith('drafts.') ? ' [pending]' : '')
@@ -325,6 +332,9 @@ export function ReviewPanel({
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="__none__" className="text-muted-foreground">
+                  No provider
+                </SelectItem>
                 {tourProviders.map((p) => (
                   <SelectItem key={p._id} value={p._id}>
                     {p.title}{p._id.startsWith('drafts.') ? ' [pending]' : ''}
