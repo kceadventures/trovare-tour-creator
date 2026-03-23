@@ -10,6 +10,14 @@ export interface UploadedFile {
   exifGps?: { lat: number; lng: number }
 }
 
+export interface ImageMeta {
+  alt?: string
+  caption?: string
+  credit?: string
+  hotspotX?: number
+  hotspotY?: number
+}
+
 export interface Stop {
   id: string
   title: string
@@ -18,6 +26,7 @@ export interface Stop {
   lat: number
   lng: number
   imageId?: string
+  imageMeta?: ImageMeta
   audioId?: string
   videoId?: string
   duplicateWarning?: DuplicateWarning

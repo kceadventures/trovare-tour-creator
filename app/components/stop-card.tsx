@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { Trash2 } from 'lucide-react'
-import { Stop, UploadedFile } from '@/lib/types'
+import { Stop, UploadedFile, ImageMeta } from '@/lib/types'
 import { POI_KINDS } from '@/lib/constants'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -44,12 +44,17 @@ interface Props {
 
 export function StopCard({ stop, index, files, onUpdate, onRemove, onRemoveMedia, onReplaceImage, replacingImage }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [showImageMeta, setShowImageMeta] = useState(false)
   const [suggestOpen, setSuggestOpen] = useState(false)
   const [suggestion, setSuggestion] = useState('')
   const [suggestSent, setSuggestSent] = useState(false)
   const matchedImage = files.find((f) => f.id === stop.imageId)
   const matchedAudio = files.find((f) => f.id === stop.audioId)
   const matchedVideo = files.find((f) => f.id === stop.videoId)
+  const meta: ImageMeta = stop.imageMeta || {}
+  const updateMeta = (patch: Partial<ImageMeta>) => {
+    onUpdate({ ...stop, imageMeta: { ...meta, ...patch } })
+  }
 
   return (
     <Card className="relative">
@@ -103,6 +108,78 @@ export function StopCard({ stop, index, files, onUpdate, onRemove, onRemoveMedia
               </Button>
             </div>
             <p className="text-xs text-muted-foreground mt-1 truncate">{matchedImage.originalName}</p>
+            {/* Image metadata */}
+            <button
+              type="button"
+              className="mt-1 text-xs text-primary hover:underline"
+              onClick={() => setShowImageMeta((v) => !v)}
+            >
+              {showImageMeta ? 'Hide image details' : 'Edit image details'}
+            </button>
+            {showImageMeta && (
+              <div className="mt-2 space-y-2 rounded-md border border-border p-3 bg-muted/30">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-muted-foreground">Alt text</label>
+                  <Input
+                    value={meta.alt || ''}
+                    placeholder="Describe the image for accessibility..."
+                    onChange={(e) => updateMeta({ alt: e.target.value })}
+                    className="h-7 text-xs"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-muted-foreground">Caption</label>
+                  <Input
+                    value={meta.caption || ''}
+                    placeholder="Caption displayed with the image..."
+                    onChange={(e) => updateMeta({ caption: e.target.value })}
+                    className="h-7 text-xs"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-muted-foreground">Credit / attribution</label>
+                  <Input
+                    value={meta.credit || ''}
+                    placeholder="Photo by..."
+                    onChange={(e) => updateMeta({ credit: e.target.value })}
+                    className="h-7 text-xs"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-muted-foreground">
+                    Hotspot (focal point for cropping)
+                  </label>
+                  <div className="relative w-full h-24 rounded overflow-hidden border border-border cursor-crosshair"
+                    onClick={(e) => {
+                      const rect = e.currentTarget.getBoundingClientRect()
+                      const x = Math.round(((e.clientX - rect.left) / rect.width) * 100) / 100
+                      const y = Math.round(((e.clientY - rect.top) / rect.height) * 100) / 100
+                      updateMeta({ hotspotX: x, hotspotY: y })
+                    }}
+                  >
+                    <img
+                      src={matchedImage.url}
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
+                    {(meta.hotspotX !== undefined && meta.hotspotY !== undefined) && (
+                      <div
+                        className="absolute w-4 h-4 border-2 border-white rounded-full shadow-md -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+                        style={{
+                          left: `${meta.hotspotX * 100}%`,
+                          top: `${meta.hotspotY * 100}%`,
+                          background: 'rgba(29, 158, 117, 0.8)',
+                        }}
+                      />
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Click the image to set the focal point
+                    {meta.hotspotX !== undefined && ` (${meta.hotspotX}, ${meta.hotspotY})`}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <div

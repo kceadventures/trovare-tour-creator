@@ -38,7 +38,16 @@ export async function POST(req: NextRequest) {
           const imgRes = await fetch(imgFile.url)
           const imgBuf = Buffer.from(await imgRes.arrayBuffer())
           const assetId = await uploadSanityAsset(imgBuf, 'image', imgFile.originalName, 'image/jpeg')
-          previewRef = { _type: 'image', asset: { _type: 'reference', _ref: assetId } }
+          previewRef = {
+            _type: 'image',
+            asset: { _type: 'reference', _ref: assetId },
+            ...(stop.imageMeta?.hotspotX != null && stop.imageMeta?.hotspotY != null
+              ? { hotspot: { _type: 'sanity.imageHotspot', x: stop.imageMeta.hotspotX, y: stop.imageMeta.hotspotY, width: 0.1, height: 0.1 } }
+              : {}),
+            ...(stop.imageMeta?.alt ? { alt: stop.imageMeta.alt } : {}),
+            ...(stop.imageMeta?.caption ? { caption: stop.imageMeta.caption } : {}),
+            ...(stop.imageMeta?.credit ? { credit: stop.imageMeta.credit } : {}),
+          }
         }
         assets.push({ filename: imgFile.originalName, type: 'image', size: imgFile.size, destination: 'Sanity CDN' })
       }
