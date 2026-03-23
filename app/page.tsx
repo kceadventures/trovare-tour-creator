@@ -580,24 +580,39 @@ export default function Home() {
                 </div>
                 <div className="space-y-1.5">
                   {historyEntries.map((entry) => (
-                    <button
+                    <div
                       key={entry.id}
-                      className="flex w-full items-center justify-between rounded-md border border-border px-3 py-2.5 text-sm text-left transition-colors hover:border-primary hover:bg-primary/5"
-                      onClick={() => handleResume(entry)}
+                      className="flex w-full items-center gap-2 rounded-md border border-border text-sm transition-colors hover:border-primary hover:bg-primary/5"
                     >
-                      <div className="flex flex-col gap-0.5">
-                        <span className="font-medium">
-                          {entry.title}
-                          {entry.dryRun && <span className="ml-1.5 text-xs text-yellow-500">(draft)</span>}
+                      <button
+                        className="flex flex-1 items-center justify-between px-3 py-2.5 text-left"
+                        onClick={() => handleResume(entry)}
+                      >
+                        <div className="flex flex-col gap-0.5">
+                          <span className="font-medium">
+                            {entry.title}
+                            {entry.dryRun && <span className="ml-1.5 text-xs text-yellow-500">(draft)</span>}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {entry.stopCount} stops · {entry.distance} mi · {entry.tourType}
+                          </span>
+                        </div>
+                        <span className="text-xs text-muted-foreground shrink-0 ml-3">
+                          {new Date(entry.createdAt).toLocaleDateString()}
                         </span>
-                        <span className="text-xs text-muted-foreground">
-                          {entry.stopCount} stops · {entry.distance} mi · {entry.tourType}
-                        </span>
-                      </div>
-                      <span className="text-xs text-muted-foreground shrink-0 ml-3">
-                        {new Date(entry.createdAt).toLocaleDateString()}
-                      </span>
-                    </button>
+                      </button>
+                      <button
+                        className="px-2 py-2.5 text-muted-foreground hover:text-destructive transition-colors"
+                        onClick={() => {
+                          const updated = historyEntries.filter((h) => h.id !== entry.id)
+                          setHistoryEntries(updated)
+                          localStorage.setItem(HISTORY_KEY, JSON.stringify(updated))
+                        }}
+                        title="Remove"
+                      >
+                        ×
+                      </button>
+                    </div>
                   ))}
                 </div>
               </div>
