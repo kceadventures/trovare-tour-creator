@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { UploadedFile, Tour, Stop, PublishResult } from '@/lib/types'
 import { parseGPX } from '@/lib/gpx'
 import { Button } from '@/components/ui/button'
@@ -87,8 +87,7 @@ function loadSaved(): SavedDraft | null {
 }
 
 export default function Home() {
-  const saved = useRef(loadSaved())
-  const [screen, setScreenRaw] = useState<Screen>(saved.current?.screen ?? 'choose')
+  const [screen, setScreenRaw] = useState<Screen>('choose')
 
   // Push screen changes to browser history
   const setScreen = useCallback((next: Screen) => {
@@ -109,18 +108,32 @@ export default function Home() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const [files, setFiles] = useState<UploadedFile[]>(saved.current?.files ?? [])
-  const [unmatchedFiles, setUnmatchedFiles] = useState<UploadedFile[]>(saved.current?.unmatchedFiles ?? [])
-  const [tour, setTour] = useState<Tour | null>(saved.current?.tour ?? null)
+  const [files, setFiles] = useState<UploadedFile[]>([])
+  const [unmatchedFiles, setUnmatchedFiles] = useState<UploadedFile[]>([])
+  const [tour, setTour] = useState<Tour | null>(null)
+  const [hydrated, setHydrated] = useState(false)
+
+  // Restore saved draft from localStorage after hydration
+  useEffect(() => {
+    const saved = loadSaved()
+    if (saved) {
+      setScreenRaw(saved.screen)
+      window.history.replaceState({ screen: saved.screen }, '', `#${saved.screen}`)
+      setFiles(saved.files)
+      setUnmatchedFiles(saved.unmatchedFiles)
+      setTour(saved.tour)
+    }
+    setHydrated(true)
+  }, [])
 
   // Auto-save draft to localStorage
   useEffect(() => {
-    // Don't save transient states
+    if (!hydrated) return
     if (screen === 'processing') return
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ screen, files, unmatchedFiles, tour }))
     } catch { /* storage full or unavailable */ }
-  }, [screen, files, unmatchedFiles, tour])
+  }, [screen, files, unmatchedFiles, tour, hydrated])
   const [tourProviders, setTourProviders] = useState<TourProvider[]>([])
   const [regions, setRegions] = useState<{ _id: string; title: string }[]>([])
   const [logMessages, setLogMessages] = useState<string[]>([])
