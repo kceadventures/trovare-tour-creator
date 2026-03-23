@@ -219,6 +219,23 @@ export default function Home() {
     }
   }
 
+  async function handleCreateProvider(data: { name: string; email: string; description: string; website: string }) {
+    try {
+      const res = await fetch('/api/providers/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+      if (!res.ok) return null
+      const created = await res.json()
+      // Add to local list with [pending] indicator (draft ID)
+      setTourProviders((prev) => [...prev, { _id: created._id, title: created.title }])
+      return created as { _id: string; title: string }
+    } catch {
+      return null
+    }
+  }
+
   function handleStartManual() {
     const emptyStop: Stop = {
       id: crypto.randomUUID(),
@@ -369,6 +386,7 @@ export default function Home() {
                   onRemoveMedia={handleRemoveMedia}
                   onReplaceImage={handleReplaceImage}
                   replacingImageStopId={replacingImageStopId}
+                  onCreateProvider={handleCreateProvider}
                 />
               </>
             )}

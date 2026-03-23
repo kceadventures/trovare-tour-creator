@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { Tour, UploadedFile, Stop } from '@/lib/types'
 import {
   TOUR_TYPES,
@@ -10,6 +11,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
 import {
   Select,
   SelectContent,
@@ -35,6 +43,7 @@ interface Props {
   onRemoveMedia: (stopId: string, category: 'image' | 'audio' | 'video') => void
   onReplaceImage: (stopId: string, file: File) => void
   replacingImageStopId?: string
+  onCreateProvider: (data: { name: string; email: string; description: string; website: string }) => Promise<TourProvider | null>
 }
 
 const CHALLENGE_LEVELS = [
@@ -53,7 +62,14 @@ export function ReviewPanel({
   onRemoveMedia,
   onReplaceImage,
   replacingImageStopId,
+  onCreateProvider,
 }: Props) {
+  const [newProviderOpen, setNewProviderOpen] = useState(false)
+  const [newProviderName, setNewProviderName] = useState('')
+  const [newProviderEmail, setNewProviderEmail] = useState('')
+  const [newProviderDesc, setNewProviderDesc] = useState('')
+  const [newProviderWebsite, setNewProviderWebsite] = useState('')
+  const [creatingProvider, setCreatingProvider] = useState(false)
   function updateStop(index: number, updated: Stop) {
     const stops = [...tour.stops]
     stops[index] = updated
@@ -186,9 +202,17 @@ export function ReviewPanel({
             </label>
             <Select
               value={tour.tourProviderId}
-              onValueChange={(v) =>
-                v && onTourUpdate({ ...tour, tourProviderId: v })
-              }
+              onValueChange={(v) => {
+                if (v === '__new__') {
+                  setNewProviderOpen(true)
+                  setNewProviderName('')
+                  setNewProviderEmail('')
+                  setNewProviderDesc('')
+                  setNewProviderWebsite('')
+                } else if (v) {
+                  onTourUpdate({ ...tour, tourProviderId: v })
+                }
+              }}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select provider" />
@@ -196,12 +220,85 @@ export function ReviewPanel({
               <SelectContent>
                 {tourProviders.map((p) => (
                   <SelectItem key={p._id} value={p._id}>
-                    {p.title}
+                    {p.title}{p._id.startsWith('drafts.') ? ' [pending]' : ''}
                   </SelectItem>
                 ))}
+                <SelectItem value="__new__" className="text-primary">
+                  + New creator...
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
+
+          {/* New provider dialog */}
+          <Dialog open={newProviderOpen} onOpenChange={setNewProviderOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>New tour creator</DialogTitle>
+                <DialogDescription>
+                  This will create a draft creator profile for review by our team.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-muted-foreground">Name *</label>
+                  <Input
+                    value={newProviderName}
+                    onChange={(e) => setNewProviderName(e.target.value)}
+                    placeholder="Creator or company name"
+                    autoFocus
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-muted-foreground">Email *</label>
+                  <Input
+                    type="email"
+                    value={newProviderEmail}
+                    onChange={(e) => setNewProviderEmail(e.target.value)}
+                    placeholder="contact@example.com"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-muted-foreground">Website or social link</label>
+                  <Input
+                    type="url"
+                    value={newProviderWebsite}
+                    onChange={(e) => setNewProviderWebsite(e.target.value)}
+                    placeholder="https://..."
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-muted-foreground">Short bio</label>
+                  <Textarea
+                    value={newProviderDesc}
+                    onChange={(e) => setNewProviderDesc(e.target.value)}
+                    placeholder="Tell us a bit about this creator..."
+                    rows={3}
+                  />
+                </div>
+                <Button
+                  className="w-full"
+                  disabled={!newProviderName.trim() || !newProviderEmail.trim() || creatingProvider}
+                  onClick={async () => {
+                    setCreatingProvider(true)
+                    const created = await onCreateProvider({
+                      name: newProviderName.trim(),
+                      email: newProviderEmail.trim(),
+                      description: newProviderDesc.trim(),
+                      website: newProviderWebsite.trim(),
+                    })
+                    setCreatingProvider(false)
+                    if (created) {
+                      onTourUpdate({ ...tour, tourProviderId: created._id })
+                      setNewProviderOpen(false)
+                    }
+                  }}
+                >
+                  {creatingProvider ? 'Creating...' : 'Create draft creator'}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
 
           {/* Duration range */}
           <div className="flex flex-col gap-1">
