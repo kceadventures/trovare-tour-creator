@@ -475,67 +475,73 @@ export function ReviewPanel({
           </div>
 
           {/* GPX Route File */}
-          <div className="flex flex-col gap-1 sm:col-span-2">
-            <label className="text-xs text-muted-foreground">Route file (GPX)</label>
-            {(() => {
-              const gpxFile = tour.gpxFileId ? files.find((f) => f.id === tour.gpxFileId) : null
-              return gpxFile ? (
-                <div className="flex items-center gap-2 rounded-md border border-border px-3 py-2">
-                  <FileUp className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  <span className="flex-1 truncate text-sm">{gpxFile.originalName}</span>
-                  <a
-                    href={gpxFile.url}
-                    download={gpxFile.originalName}
-                    className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
-                  >
-                    <Download className="h-3 w-3" />
-                    Download
-                  </a>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
-                    onClick={() => onTourUpdate({ ...tour, gpxFileId: undefined })}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-6 text-xs"
-                    onClick={() => gpxInputRef.current?.click()}
-                    disabled={uploadingGpx}
-                  >
-                    {uploadingGpx ? 'Uploading...' : 'Replace'}
-                  </Button>
-                </div>
-              ) : (
-                <div
-                  className="flex cursor-pointer items-center justify-center gap-2 rounded-md border-2 border-dashed border-muted-foreground/25 px-3 py-4 text-sm text-muted-foreground transition-colors hover:border-primary/50"
-                  onClick={() => gpxInputRef.current?.click()}
-                >
-                  <FileUp className="h-4 w-4" />
-                  {uploadingGpx ? 'Uploading...' : 'Click to upload GPX route file'}
-                </div>
-              )
-            })()}
-            <input
-              ref={gpxInputRef}
-              type="file"
-              accept=".gpx"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0]
-                if (file) onUploadGpx(file)
-                e.target.value = ''
-              }}
-            />
-          </div>
+          {/* Route file + preview */}
+          <div className="flex flex-col gap-2 sm:col-span-2">
+            <label className="text-xs text-muted-foreground">Route (GPX)</label>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {/* Left: upload / file info */}
+              <div className="flex flex-col gap-2">
+                {(() => {
+                  const gpxFile = tour.gpxFileId ? files.find((f) => f.id === tour.gpxFileId) : null
+                  return gpxFile ? (
+                    <div className="space-y-2 rounded-md border border-border p-3">
+                      <div className="flex items-center gap-2">
+                        <FileUp className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        <span className="flex-1 truncate text-sm">{gpxFile.originalName}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <a
+                          href={gpxFile.url}
+                          download={gpxFile.originalName}
+                          className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                        >
+                          <Download className="h-3 w-3" />
+                          Download
+                        </a>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-6 text-xs"
+                          onClick={() => gpxInputRef.current?.click()}
+                          disabled={uploadingGpx}
+                        >
+                          {uploadingGpx ? 'Uploading...' : 'Replace'}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 text-xs text-muted-foreground hover:text-destructive"
+                          onClick={() => onTourUpdate({ ...tour, gpxFileId: undefined })}
+                        >
+                          <X className="h-3 w-3" />
+                          Remove
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      className="flex h-full cursor-pointer items-center justify-center gap-2 rounded-md border-2 border-dashed border-muted-foreground/25 px-3 py-6 text-sm text-muted-foreground transition-colors hover:border-primary/50"
+                      onClick={() => gpxInputRef.current?.click()}
+                    >
+                      <FileUp className="h-4 w-4" />
+                      {uploadingGpx ? 'Uploading...' : 'Upload GPX file'}
+                    </div>
+                  )
+                })()}
+                <input
+                  ref={gpxInputRef}
+                  type="file"
+                  accept=".gpx"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) onUploadGpx(file)
+                    e.target.value = ''
+                  }}
+                />
+              </div>
 
-          {/* Route Preview */}
-          {(tour.routePoints.length > 0 || tour.stops.some((s) => s.lat && s.lng)) && (
-            <div className="flex flex-col gap-1 sm:col-span-2">
-              <label className="text-xs text-muted-foreground">Route preview</label>
+              {/* Right: route preview */}
               <RoutePreview
                 routePoints={tour.routePoints}
                 stops={tour.stops
@@ -543,7 +549,7 @@ export function ReviewPanel({
                   .map((s, i) => ({ lat: s.lat, lng: s.lng, index: i, title: s.title }))}
               />
             </div>
-          )}
+          </div>
         </CardContent>
       </Card>
 
