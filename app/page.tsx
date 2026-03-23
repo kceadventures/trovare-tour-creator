@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { UploadedFile, Tour, Stop, PublishResult } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -17,7 +17,30 @@ interface TourProvider {
 }
 
 export default function Home() {
-  const [screen, setScreen] = useState<Screen>('choose')
+  const [screen, setScreenRaw] = useState<Screen>('choose')
+
+  // Push screen changes to browser history
+  const setScreen = useCallback((next: Screen) => {
+    setScreenRaw((prev) => {
+      if (prev !== next) {
+        window.history.pushState({ screen: next }, '', `#${next}`)
+      }
+      return next
+    })
+  }, [])
+
+  // Handle browser back/forward
+  useEffect(() => {
+    // Set initial history entry
+    window.history.replaceState({ screen: 'choose' }, '', '#choose')
+
+    function onPopState(e: PopStateEvent) {
+      const s = e.state?.screen as Screen | undefined
+      if (s) setScreenRaw(s)
+    }
+    window.addEventListener('popstate', onPopState)
+    return () => window.removeEventListener('popstate', onPopState)
+  }, [])
   const [files, setFiles] = useState<UploadedFile[]>([])
   const [unmatchedFiles, setUnmatchedFiles] = useState<UploadedFile[]>([])
   const [tour, setTour] = useState<Tour | null>(null)
@@ -217,7 +240,9 @@ export default function Home() {
   }
 
   function handleReset() {
-    setScreen('choose')
+    // Replace rather than push so back doesn't cycle through resets
+    window.history.pushState({ screen: 'choose' }, '', '#choose')
+    setScreenRaw('choose')
     setFiles([])
     setUnmatchedFiles([])
     setTour(null)
