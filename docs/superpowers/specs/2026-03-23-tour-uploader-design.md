@@ -15,7 +15,8 @@ The current tool requires creators to physically walk a route with the app open.
 - **Storage:** Digital Ocean Spaces (go-trovare.nyc3.digitaloceanspaces.com)
 - **CMS:** Sanity (project 48sx65rc, dataset production)
 - **AI:** Claude via Anthropic SDK
-- **Compression:** Sharp (images), fluent-ffmpeg (audio/video)
+- **Styling:** Tailwind CSS + shadcn/ui
+- **Compression:** Sharp (images)
 
 ## Page Flow
 
@@ -126,6 +127,35 @@ go-trovare.nyc3.digitaloceanspaces.com/
 - audioUpload — r2.asset object: `{_type: 'r2.asset', filename, filesize, fileType, assetKey, url}` pointing to DO Spaces CDN (no Studio preview)
 - videoUpload — r2.asset object: same shape, pointing to DO Spaces CDN (no Studio preview)
 
+## Testing Mode
+
+An env variable `TESTING_MODE=true` (or a toggle in the UI) enables dry-run publishing:
+
+- Files are processed and uploaded to DO Spaces as normal
+- AI processing runs as normal
+- On publish, instead of writing to Sanity, the app displays a verbose breakdown:
+  - Every document that would be created (full JSON with _id, _type, all fields)
+  - Every Sanity asset that would be uploaded (filename, type, size, destination)
+  - Every reference relationship (tour → POIs, tour → region, etc.)
+  - Warnings for missing required fields or unmatched media
+- Displayed in a scrollable panel with syntax-highlighted JSON
+- Includes a "Copy to clipboard" button for the full output
+
+This lets creators and developers verify the pipeline end-to-end without touching Sanity.
+
+## Duplicate Detection
+
+Before publishing, `/api/publish` checks for existing Sanity documents that may conflict:
+
+1. **Tour title match:** Query `*[_type == "tour" && title == $title]{_id, title}` — warn if a tour with the same title exists
+2. **POI location proximity:** For each stop, query `*[_type == "pointOfInterest" && geo::distance(location, $loc) < 50]{_id, title, location}` — warn if a POI already exists within 50m of the new stop
+3. **POI title match:** Query `*[_type == "pointOfInterest" && title == $title]{_id, title}` — warn if a POI with the same name exists
+
+Duplicates don't block publish — they surface as warnings in the review step. The creator can:
+- Dismiss and publish anyway (creates new documents)
+- Skip individual stops that are duplicates (reuse existing POI references)
+- Cancel and investigate
+
 ## Edge Cases
 
 - **Stop with no matched image:** Review step flags it. Creator must assign an image before publish. If no images available, publish is blocked for that stop.
@@ -149,6 +179,8 @@ No user-facing auth. All credentials server-side:
 - exifr (EXIF GPS extraction)
 - @anthropic-ai/sdk
 - sharp
+- tailwindcss + @tailwindcss/typography
+- shadcn/ui components (Button, Card, Select, Input, Textarea, Progress, Dialog, DropdownMenu, Tabs, Badge, Toast)
 
 ## Future
 
