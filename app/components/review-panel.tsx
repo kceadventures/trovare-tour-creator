@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/select'
 import { StopCard } from './stop-card'
 import { MediaAssignment } from './media-assignment'
+import { RoutePreview } from './route-preview'
 
 interface TourProvider {
   _id: string
@@ -530,6 +531,19 @@ export function ReviewPanel({
               }}
             />
           </div>
+
+          {/* Route Preview */}
+          {(tour.routePoints.length > 0 || tour.stops.some((s) => s.lat && s.lng)) && (
+            <div className="flex flex-col gap-1 sm:col-span-2">
+              <label className="text-xs text-muted-foreground">Route preview</label>
+              <RoutePreview
+                routePoints={tour.routePoints}
+                stops={tour.stops
+                  .filter((s) => s.lat && s.lng)
+                  .map((s, i) => ({ lat: s.lat, lng: s.lng, index: i, title: s.title }))}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
 
