@@ -41,6 +41,7 @@ export default function Home() {
   const [unmatchedFiles, setUnmatchedFiles] = useState<UploadedFile[]>([])
   const [tour, setTour] = useState<Tour | null>(null)
   const [tourProviders, setTourProviders] = useState<TourProvider[]>([])
+  const [regions, setRegions] = useState<{ _id: string; title: string }[]>([])
   const [logMessages, setLogMessages] = useState<string[]>([])
   const [processProgress, setProcessProgress] = useState(0)
   const [processing, setProcessing] = useState(false)
@@ -48,14 +49,22 @@ export default function Home() {
   const [publishing, setPublishing] = useState(false)
   const [publishResult, setPublishResult] = useState<PublishResult | null>(null)
 
-  // Fetch tour providers when entering review screen
+  // Fetch tour providers and regions when entering review screen
   useEffect(() => {
-    if (screen !== 'review' || tourProviders.length > 0) return
-    fetch('/api/providers')
-      .then((r) => r.json())
-      .then((data) => { if (Array.isArray(data)) setTourProviders(data) })
-      .catch(() => {})
-  }, [screen, tourProviders.length])
+    if (screen !== 'review') return
+    if (tourProviders.length === 0) {
+      fetch('/api/providers')
+        .then((r) => r.json())
+        .then((data) => { if (Array.isArray(data)) setTourProviders(data) })
+        .catch(() => {})
+    }
+    if (regions.length === 0) {
+      fetch('/api/regions')
+        .then((r) => r.json())
+        .then((data) => { if (Array.isArray(data)) setRegions(data) })
+        .catch(() => {})
+    }
+  }, [screen, tourProviders.length, regions.length])
 
   function addLog(msg: string) {
     setLogMessages((prev) => [...prev, msg])
@@ -236,6 +245,22 @@ export default function Home() {
     }
   }
 
+  async function handleCreateRegion(data: { title: string; description: string; lat?: number; lng?: number }) {
+    try {
+      const res = await fetch('/api/regions/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+      if (!res.ok) return null
+      const created = await res.json()
+      setRegions((prev) => [...prev, { _id: created._id, title: created.title }])
+      return created as { _id: string; title: string }
+    } catch {
+      return null
+    }
+  }
+
   function handleStartManual() {
     const emptyStop: Stop = {
       id: crypto.randomUUID(),
@@ -269,6 +294,7 @@ export default function Home() {
     setUnmatchedFiles([])
     setTour(null)
     setTourProviders([])
+    setRegions([])
     setLogMessages([])
     setProcessProgress(0)
     setProcessing(false)
@@ -402,6 +428,8 @@ export default function Home() {
                   onReplaceImage={handleReplaceImage}
                   replacingImageStopId={replacingImageStopId}
                   onCreateProvider={handleCreateProvider}
+                  regions={regions}
+                  onCreateRegion={handleCreateRegion}
                 />
               </>
             )}

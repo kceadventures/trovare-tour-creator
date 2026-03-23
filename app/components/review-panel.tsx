@@ -5,7 +5,6 @@ import { Tour, UploadedFile, Stop } from '@/lib/types'
 import {
   TOUR_TYPES,
   CATEGORY_TAGS,
-  REGIONS,
 } from '@/lib/constants'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -44,6 +43,8 @@ interface Props {
   onReplaceImage: (stopId: string, file: File) => void
   replacingImageStopId?: string
   onCreateProvider: (data: { name: string; email: string; description: string; website: string }) => Promise<TourProvider | null>
+  regions: { _id: string; title: string }[]
+  onCreateRegion: (data: { title: string; description: string; lat?: number; lng?: number }) => Promise<{ _id: string; title: string } | null>
 }
 
 const CHALLENGE_LEVELS = [
@@ -63,7 +64,16 @@ export function ReviewPanel({
   onReplaceImage,
   replacingImageStopId,
   onCreateProvider,
+  regions,
+  onCreateRegion,
 }: Props) {
+  const [newRegionOpen, setNewRegionOpen] = useState(false)
+  const [newRegionTitle, setNewRegionTitle] = useState('')
+  const [newRegionDesc, setNewRegionDesc] = useState('')
+  const [newRegionLat, setNewRegionLat] = useState('')
+  const [newRegionLng, setNewRegionLng] = useState('')
+  const [creatingRegion, setCreatingRegion] = useState(false)
+
   const [newProviderOpen, setNewProviderOpen] = useState(false)
   const [newProviderName, setNewProviderName] = useState('')
   const [newProviderEmail, setNewProviderEmail] = useState('')
@@ -180,20 +190,107 @@ export function ReviewPanel({
             <label className="text-xs text-muted-foreground">Region</label>
             <Select
               value={tour.regionId}
-              onValueChange={(v) => v && onTourUpdate({ ...tour, regionId: v })}
+              onValueChange={(v) => {
+                if (v === '__new__') {
+                  setNewRegionOpen(true)
+                  setNewRegionTitle('')
+                  setNewRegionDesc('')
+                  setNewRegionLat('')
+                  setNewRegionLng('')
+                } else if (v) {
+                  onTourUpdate({ ...tour, regionId: v })
+                }
+              }}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select region" />
               </SelectTrigger>
               <SelectContent>
-                {REGIONS.map((r) => (
+                {regions.map((r) => (
                   <SelectItem key={r._id} value={r._id}>
-                    {r.title}
+                    {r.title}{r._id.startsWith('drafts.') ? ' [pending]' : ''}
                   </SelectItem>
                 ))}
+                <SelectItem value="__new__" className="text-primary">
+                  + New region...
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
+
+          {/* New region dialog */}
+          <Dialog open={newRegionOpen} onOpenChange={setNewRegionOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>New region</DialogTitle>
+                <DialogDescription>
+                  This will create a draft region for review by our team.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-muted-foreground">Region name *</label>
+                  <Input
+                    value={newRegionTitle}
+                    onChange={(e) => setNewRegionTitle(e.target.value)}
+                    placeholder="e.g. Porto, Amalfi Coast, Kyoto..."
+                    autoFocus
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-muted-foreground">Description</label>
+                  <Textarea
+                    value={newRegionDesc}
+                    onChange={(e) => setNewRegionDesc(e.target.value)}
+                    placeholder="Brief description of the region..."
+                    rows={2}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs text-muted-foreground">Latitude</label>
+                    <Input
+                      type="number"
+                      step="any"
+                      value={newRegionLat}
+                      onChange={(e) => setNewRegionLat(e.target.value)}
+                      placeholder="41.14961"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs text-muted-foreground">Longitude</label>
+                    <Input
+                      type="number"
+                      step="any"
+                      value={newRegionLng}
+                      onChange={(e) => setNewRegionLng(e.target.value)}
+                      placeholder="-8.61099"
+                    />
+                  </div>
+                </div>
+                <Button
+                  className="w-full"
+                  disabled={!newRegionTitle.trim() || creatingRegion}
+                  onClick={async () => {
+                    setCreatingRegion(true)
+                    const created = await onCreateRegion({
+                      title: newRegionTitle.trim(),
+                      description: newRegionDesc.trim(),
+                      lat: newRegionLat ? parseFloat(newRegionLat) : undefined,
+                      lng: newRegionLng ? parseFloat(newRegionLng) : undefined,
+                    })
+                    setCreatingRegion(false)
+                    if (created) {
+                      onTourUpdate({ ...tour, regionId: created._id })
+                      setNewRegionOpen(false)
+                    }
+                  }}
+                >
+                  {creatingRegion ? 'Creating...' : 'Create draft region'}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
 
           {/* Tour Provider */}
           <div className="flex flex-col gap-1">
