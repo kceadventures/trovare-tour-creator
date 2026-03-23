@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
+import { FileUp, Download, X } from 'lucide-react'
 import { Tour, UploadedFile, Stop } from '@/lib/types'
 import {
   TOUR_TYPES,
@@ -45,6 +46,8 @@ interface Props {
   onCreateProvider: (data: { name: string; email: string; description: string; website: string }) => Promise<TourProvider | null>
   regions: { _id: string; title: string }[]
   onCreateRegion: (data: { title: string; description: string; lat?: number; lng?: number }) => Promise<{ _id: string; title: string } | null>
+  onUploadGpx: (file: File) => Promise<void>
+  uploadingGpx?: boolean
 }
 
 const CHALLENGE_LEVELS = [
@@ -66,7 +69,10 @@ export function ReviewPanel({
   onCreateProvider,
   regions,
   onCreateRegion,
+  onUploadGpx,
+  uploadingGpx,
 }: Props) {
+  const gpxInputRef = useRef<HTMLInputElement>(null)
   const [newRegionOpen, setNewRegionOpen] = useState(false)
   const [newRegionTitle, setNewRegionTitle] = useState('')
   const [newRegionDesc, setNewRegionDesc] = useState('')
@@ -465,6 +471,64 @@ export function ReviewPanel({
             <p className="text-sm text-muted-foreground">
               {distanceKm} km &middot; {tour.stops.length} stops
             </p>
+          </div>
+
+          {/* GPX Route File */}
+          <div className="flex flex-col gap-1 sm:col-span-2">
+            <label className="text-xs text-muted-foreground">Route file (GPX)</label>
+            {(() => {
+              const gpxFile = tour.gpxFileId ? files.find((f) => f.id === tour.gpxFileId) : null
+              return gpxFile ? (
+                <div className="flex items-center gap-2 rounded-md border border-border px-3 py-2">
+                  <FileUp className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <span className="flex-1 truncate text-sm">{gpxFile.originalName}</span>
+                  <a
+                    href={gpxFile.url}
+                    download={gpxFile.originalName}
+                    className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                  >
+                    <Download className="h-3 w-3" />
+                    Download
+                  </a>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                    onClick={() => onTourUpdate({ ...tour, gpxFileId: undefined })}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-6 text-xs"
+                    onClick={() => gpxInputRef.current?.click()}
+                    disabled={uploadingGpx}
+                  >
+                    {uploadingGpx ? 'Uploading...' : 'Replace'}
+                  </Button>
+                </div>
+              ) : (
+                <div
+                  className="flex cursor-pointer items-center justify-center gap-2 rounded-md border-2 border-dashed border-muted-foreground/25 px-3 py-4 text-sm text-muted-foreground transition-colors hover:border-primary/50"
+                  onClick={() => gpxInputRef.current?.click()}
+                >
+                  <FileUp className="h-4 w-4" />
+                  {uploadingGpx ? 'Uploading...' : 'Click to upload GPX route file'}
+                </div>
+              )
+            })()}
+            <input
+              ref={gpxInputRef}
+              type="file"
+              accept=".gpx"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file) onUploadGpx(file)
+                e.target.value = ''
+              }}
+            />
           </div>
         </CardContent>
       </Card>

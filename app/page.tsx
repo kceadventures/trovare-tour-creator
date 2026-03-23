@@ -228,6 +228,25 @@ export default function Home() {
     }
   }
 
+  const [uploadingGpx, setUploadingGpx] = useState(false)
+
+  async function handleUploadGpx(file: File) {
+    setUploadingGpx(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await fetch('/api/upload', { method: 'POST', body: formData })
+      if (!res.ok) throw new Error('Upload failed')
+      const uploaded: UploadedFile = await res.json()
+      setFiles((prev) => [...prev, uploaded])
+      setTour((prev) => prev ? { ...prev, gpxFileId: uploaded.id } : prev)
+    } catch (e) {
+      console.error('GPX upload failed:', e)
+    } finally {
+      setUploadingGpx(false)
+    }
+  }
+
   async function handleCreateProvider(data: { name: string; email: string; description: string; website: string }) {
     try {
       const res = await fetch('/api/providers/create', {
@@ -430,6 +449,8 @@ export default function Home() {
                   onCreateProvider={handleCreateProvider}
                   regions={regions}
                   onCreateRegion={handleCreateRegion}
+                  onUploadGpx={handleUploadGpx}
+                  uploadingGpx={uploadingGpx}
                 />
               </>
             )}
