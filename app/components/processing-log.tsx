@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 
@@ -10,6 +11,16 @@ interface Props {
 }
 
 export function ProcessingLog({ messages, processing, progress }: Props) {
+  // Warn before unload while processing
+  useEffect(() => {
+    if (!processing) return
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault()
+    }
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [processing])
+
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -21,6 +32,11 @@ export function ProcessingLog({ messages, processing, progress }: Props) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {processing && (
+          <p className="text-xs text-muted-foreground bg-muted/50 rounded px-3 py-2 text-center">
+            Please don&apos;t refresh or close this page while processing is in progress.
+          </p>
+        )}
         <div className="space-y-1.5">
           <Progress value={progress} className="h-2" />
           <p className="text-xs text-muted-foreground text-right">{progress}%</p>
