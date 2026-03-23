@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
+import { Trash2 } from 'lucide-react'
 import { Stop, UploadedFile } from '@/lib/types'
 import { POI_KINDS } from '@/lib/constants'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
@@ -66,10 +67,11 @@ export function StopCard({ stop, index, files, onUpdate, onRemove, onRemoveMedia
           <Button
             variant="outline"
             size="sm"
-            className="h-7 shrink-0 text-xs text-destructive border-destructive/30 hover:bg-destructive hover:text-destructive-foreground"
+            className="h-7 shrink-0 gap-1 text-xs text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
             onClick={() => onRemove(stop.id)}
           >
-            Remove stop
+            <Trash2 className="h-3 w-3" />
+            Remove
           </Button>
         </div>
       </CardHeader>
