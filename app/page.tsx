@@ -285,7 +285,7 @@ export default function Home() {
                 <CardContent className="pt-6 text-center space-y-3">
                   <div className="text-4xl">✦</div>
                   <h2 className="text-lg font-semibold">AI-Assisted</h2>
-                  <p className="text-sm text-muted-foreground text-balance">
+                  <p className="text-sm text-muted-foreground text-balance text-left">
                     Drop your GPX, photos, audio, and notes. AI will organize everything into a complete tour.
                   </p>
                 </CardContent>
@@ -297,7 +297,7 @@ export default function Home() {
                 <CardContent className="pt-6 text-center space-y-3">
                   <div className="text-4xl">✎</div>
                   <h2 className="text-lg font-semibold">Manual</h2>
-                  <p className="text-sm text-muted-foreground text-balance">
+                  <p className="text-sm text-muted-foreground text-balance text-left">
                     Build your tour from scratch. Add stops, upload images, and write descriptions yourself.
                   </p>
                 </CardContent>
