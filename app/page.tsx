@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { UploadedFile, Tour, Stop, PublishResult } from '@/lib/types'
+import { parseGPX } from '@/lib/gpx'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { DropZone } from './components/drop-zone'
@@ -233,13 +234,46 @@ export default function Home() {
   async function handleUploadGpx(file: File) {
     setUploadingGpx(true)
     try {
+      // Parse GPX client-side for route points + waypoints
+      const gpxText = await file.text()
+      const gpxData = parseGPX(gpxText)
+
+      // Upload to DO Spaces
       const formData = new FormData()
       formData.append('file', file)
       const res = await fetch('/api/upload', { method: 'POST', body: formData })
       if (!res.ok) throw new Error('Upload failed')
       const uploaded: UploadedFile = await res.json()
       setFiles((prev) => [...prev, uploaded])
-      setTour((prev) => prev ? { ...prev, gpxFileId: uploaded.id } : prev)
+
+      // Create stops from waypoints
+      const newStops: Stop[] = gpxData.waypoints.map((wp) => ({
+        id: crypto.randomUUID(),
+        title: wp.name,
+        kind: 'touristAttraction',
+        details: '',
+        lat: wp.lat,
+        lng: wp.lng,
+      }))
+
+      setTour((prev) => {
+        if (!prev) return prev
+        // Merge: keep existing stops that have content, add new waypoint stops
+        const existingWithContent = prev.stops.filter(
+          (s) => s.title || s.details || s.imageId || s.audioId || s.videoId
+        )
+        const mergedStops = existingWithContent.length > 0
+          ? existingWithContent
+          : newStops.length > 0 ? newStops : prev.stops
+
+        return {
+          ...prev,
+          gpxFileId: uploaded.id,
+          routePoints: gpxData.trackPoints,
+          distance: gpxData.distance,
+          stops: newStops.length > 0 && existingWithContent.length === 0 ? newStops : mergedStops,
+        }
+      })
     } catch (e) {
       console.error('GPX upload failed:', e)
     } finally {
