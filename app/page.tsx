@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { UploadedFile, Tour, Stop, PublishResult } from '@/lib/types'
 import { parseGPX } from '@/lib/gpx'
 import { Button } from '@/components/ui/button'
@@ -17,8 +17,27 @@ interface TourProvider {
   title: string
 }
 
+const STORAGE_KEY = 'trovare_draft'
+
+function loadSaved() {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (!raw) return null
+    return JSON.parse(raw) as {
+      screen: Screen
+      files: UploadedFile[]
+      unmatchedFiles: UploadedFile[]
+      tour: Tour | null
+    }
+  } catch {
+    return null
+  }
+}
+
 export default function Home() {
-  const [screen, setScreenRaw] = useState<Screen>('choose')
+  const saved = useRef(loadSaved())
+  const [screen, setScreenRaw] = useState<Screen>(saved.current?.screen ?? 'choose')
 
   // Push screen changes to browser history
   const setScreen = useCallback((next: Screen) => {
@@ -28,8 +47,7 @@ export default function Home() {
 
   // Handle browser back/forward
   useEffect(() => {
-    // Set initial history entry
-    window.history.replaceState({ screen: 'choose' }, '', '#choose')
+    window.history.replaceState({ screen }, '', `#${screen}`)
 
     function onPopState(e: PopStateEvent) {
       const s = e.state?.screen as Screen | undefined
@@ -37,10 +55,21 @@ export default function Home() {
     }
     window.addEventListener('popstate', onPopState)
     return () => window.removeEventListener('popstate', onPopState)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
-  const [files, setFiles] = useState<UploadedFile[]>([])
-  const [unmatchedFiles, setUnmatchedFiles] = useState<UploadedFile[]>([])
-  const [tour, setTour] = useState<Tour | null>(null)
+
+  const [files, setFiles] = useState<UploadedFile[]>(saved.current?.files ?? [])
+  const [unmatchedFiles, setUnmatchedFiles] = useState<UploadedFile[]>(saved.current?.unmatchedFiles ?? [])
+  const [tour, setTour] = useState<Tour | null>(saved.current?.tour ?? null)
+
+  // Auto-save draft to localStorage
+  useEffect(() => {
+    // Don't save transient states
+    if (screen === 'processing') return
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ screen, files, unmatchedFiles, tour }))
+    } catch { /* storage full or unavailable */ }
+  }, [screen, files, unmatchedFiles, tour])
   const [tourProviders, setTourProviders] = useState<TourProvider[]>([])
   const [regions, setRegions] = useState<{ _id: string; title: string }[]>([])
   const [logMessages, setLogMessages] = useState<string[]>([])
@@ -354,6 +383,7 @@ export default function Home() {
     setUploading(false)
     setPublishing(false)
     setPublishResult(null)
+    localStorage.removeItem(STORAGE_KEY)
   }
 
   return (
