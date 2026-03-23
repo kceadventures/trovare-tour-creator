@@ -31,6 +31,9 @@ interface Props {
   tourProviders: TourProvider[]
   onTourUpdate: (tour: Tour) => void
   onAssignMedia: (fileId: string, stopId: string) => void
+  onRemoveMedia: (stopId: string, category: 'image' | 'audio' | 'video') => void
+  onReplaceImage: (stopId: string, file: File) => void
+  replacingImageStopId?: string
 }
 
 const CHALLENGE_LEVELS = [
@@ -46,6 +49,9 @@ export function ReviewPanel({
   tourProviders,
   onTourUpdate,
   onAssignMedia,
+  onRemoveMedia,
+  onReplaceImage,
+  replacingImageStopId,
 }: Props) {
   function updateStop(index: number, updated: Stop) {
     const stops = [...tour.stops]
@@ -264,6 +270,9 @@ export function ReviewPanel({
             index={i}
             files={files}
             onUpdate={(updated) => updateStop(i, updated)}
+            onRemoveMedia={onRemoveMedia}
+            onReplaceImage={onReplaceImage}
+            replacingImage={replacingImageStopId === stop.id}
           />
         ))}
       </div>

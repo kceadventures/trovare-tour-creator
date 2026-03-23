@@ -1,11 +1,13 @@
 'use client'
 
+import { useRef } from 'react'
 import { Stop, UploadedFile } from '@/lib/types'
 import { POI_KINDS } from '@/lib/constants'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   Select,
   SelectContent,
@@ -21,25 +23,21 @@ function camelToReadable(s: string): string {
     .trim()
 }
 
-const FILE_EMOJI: Record<string, string> = {
-  image: '🖼️',
-  audio: '🎵',
-  video: '🎬',
-}
-
 interface Props {
   stop: Stop
   index: number
   files: UploadedFile[]
   onUpdate: (updated: Stop) => void
+  onRemoveMedia: (stopId: string, category: 'image' | 'audio' | 'video') => void
+  onReplaceImage: (stopId: string, file: File) => void
+  replacingImage?: boolean
 }
 
-export function StopCard({ stop, index, files, onUpdate }: Props) {
+export function StopCard({ stop, index, files, onUpdate, onRemoveMedia, onReplaceImage, replacingImage }: Props) {
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const matchedImage = files.find((f) => f.id === stop.imageId)
   const matchedAudio = files.find((f) => f.id === stop.audioId)
   const matchedVideo = files.find((f) => f.id === stop.videoId)
-
-  const hasImage = !!matchedImage
 
   return (
     <Card className="relative">
@@ -58,6 +56,58 @@ export function StopCard({ stop, index, files, onUpdate }: Props) {
       </CardHeader>
 
       <CardContent className="space-y-3">
+        {/* Image preview */}
+        {matchedImage ? (
+          <div className="relative group">
+            <img
+              src={matchedImage.url}
+              alt={stop.title || `Stop ${index + 1}`}
+              className="w-full h-40 object-cover rounded-md border border-border"
+            />
+            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-md flex items-center justify-center gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={replacingImage}
+              >
+                {replacingImage ? 'Uploading...' : 'Replace'}
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => onRemoveMedia(stop.id, 'image')}
+              >
+                Remove
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1 truncate">{matchedImage.originalName}</p>
+          </div>
+        ) : (
+          <div
+            className="w-full h-32 border-2 border-dashed border-muted-foreground/25 rounded-md flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-primary/50 transition-colors"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <span className="text-2xl text-muted-foreground/50">🖼️</span>
+            <span className="text-xs text-muted-foreground">
+              {replacingImage ? 'Uploading...' : 'Click to add image'}
+            </span>
+          </div>
+        )}
+
+        {/* Hidden file input for image upload/replace */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".jpg,.jpeg,.png"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0]
+            if (file) onReplaceImage(stop.id, file)
+            e.target.value = ''
+          }}
+        />
+
         {/* Kind select */}
         <div className="flex flex-col gap-1">
           <label className="text-xs text-muted-foreground">Type</label>
@@ -97,25 +147,29 @@ export function StopCard({ stop, index, files, onUpdate }: Props) {
           />
         </div>
 
-        {/* Media badges */}
+        {/* Audio/Video badges with remove */}
         <div className="flex flex-wrap gap-2">
-          {matchedImage && (
-            <Badge variant="secondary">
-              {FILE_EMOJI.image} {matchedImage.originalName}
-            </Badge>
-          )}
           {matchedAudio && (
-            <Badge variant="secondary">
-              {FILE_EMOJI.audio} {matchedAudio.originalName}
+            <Badge variant="secondary" className="gap-1">
+              🎵 {matchedAudio.originalName}
+              <button
+                className="ml-1 text-muted-foreground hover:text-foreground"
+                onClick={() => onRemoveMedia(stop.id, 'audio')}
+              >
+                ×
+              </button>
             </Badge>
           )}
           {matchedVideo && (
-            <Badge variant="secondary">
-              {FILE_EMOJI.video} {matchedVideo.originalName}
+            <Badge variant="secondary" className="gap-1">
+              🎬 {matchedVideo.originalName}
+              <button
+                className="ml-1 text-muted-foreground hover:text-foreground"
+                onClick={() => onRemoveMedia(stop.id, 'video')}
+              >
+                ×
+              </button>
             </Badge>
-          )}
-          {!hasImage && (
-            <Badge variant="destructive">No image</Badge>
           )}
         </div>
 

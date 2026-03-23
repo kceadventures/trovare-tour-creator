@@ -149,6 +149,47 @@ export default function Home() {
     })
   }
 
+  const [replacingImageStopId, setReplacingImageStopId] = useState<string | undefined>()
+
+  function handleRemoveMedia(stopId: string, category: 'image' | 'audio' | 'video') {
+    setTour((prev) => {
+      if (!prev) return prev
+      const stops = prev.stops.map((stop) => {
+        if (stop.id !== stopId) return stop
+        if (category === 'image') return { ...stop, imageId: undefined }
+        if (category === 'audio') return { ...stop, audioId: undefined }
+        if (category === 'video') return { ...stop, videoId: undefined }
+        return stop
+      })
+      return { ...prev, stops }
+    })
+  }
+
+  async function handleReplaceImage(stopId: string, file: File) {
+    setReplacingImageStopId(stopId)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await fetch('/api/upload', { method: 'POST', body: formData })
+      if (!res.ok) throw new Error('Upload failed')
+      const uploaded: UploadedFile = await res.json()
+
+      setFiles((prev) => [...prev, uploaded])
+      setTour((prev) => {
+        if (!prev) return prev
+        const stops = prev.stops.map((stop) => {
+          if (stop.id !== stopId) return stop
+          return { ...stop, imageId: uploaded.id }
+        })
+        return { ...prev, stops }
+      })
+    } catch (e) {
+      console.error('Image replace failed:', e)
+    } finally {
+      setReplacingImageStopId(undefined)
+    }
+  }
+
   function handleReset() {
     setScreen('drop')
     setFiles([])
@@ -231,6 +272,9 @@ export default function Home() {
                   tourProviders={tourProviders}
                   onTourUpdate={setTour}
                   onAssignMedia={handleAssignMedia}
+                  onRemoveMedia={handleRemoveMedia}
+                  onReplaceImage={handleReplaceImage}
+                  replacingImageStopId={replacingImageStopId}
                 />
               </>
             )}
