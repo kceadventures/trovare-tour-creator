@@ -13,7 +13,7 @@ type Screen = 'choose' | 'drop' | 'processing' | 'review' | 'publish'
 
 interface TourProvider {
   _id: string
-  name: string
+  title: string
 }
 
 export default function Home() {
@@ -47,6 +47,15 @@ export default function Home() {
   const [uploading, setUploading] = useState(false)
   const [publishing, setPublishing] = useState(false)
   const [publishResult, setPublishResult] = useState<PublishResult | null>(null)
+
+  // Fetch tour providers when entering review screen
+  useEffect(() => {
+    if (screen !== 'review' || tourProviders.length > 0) return
+    fetch('/api/providers')
+      .then((r) => r.json())
+      .then((data) => { if (Array.isArray(data)) setTourProviders(data) })
+      .catch(() => {})
+  }, [screen, tourProviders.length])
 
   function addLog(msg: string) {
     setLogMessages((prev) => [...prev, msg])

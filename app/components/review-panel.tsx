@@ -22,7 +22,7 @@ import { MediaAssignment } from './media-assignment'
 
 interface TourProvider {
   _id: string
-  name: string
+  title: string
 }
 
 interface Props {
@@ -196,7 +196,7 @@ export function ReviewPanel({
               <SelectContent>
                 {tourProviders.map((p) => (
                   <SelectItem key={p._id} value={p._id}>
-                    {p.name}
+                    {p.title}
                   </SelectItem>
                 ))}
               </SelectContent>
