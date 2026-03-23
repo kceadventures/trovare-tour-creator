@@ -7,6 +7,7 @@ import {
   REGIONS,
 } from '@/lib/constants'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import {
@@ -275,6 +276,23 @@ export function ReviewPanel({
             replacingImage={replacingImageStopId === stop.id}
           />
         ))}
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={() => {
+            const newStop: Stop = {
+              id: crypto.randomUUID(),
+              title: '',
+              kind: 'touristAttraction',
+              details: '',
+              lat: 0,
+              lng: 0,
+            }
+            onTourUpdate({ ...tour, stops: [...tour.stops, newStop] })
+          }}
+        >
+          + Add stop
+        </Button>
       </div>
     </div>
   )

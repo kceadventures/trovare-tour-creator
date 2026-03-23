@@ -1,14 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { UploadedFile, Tour, PublishResult } from '@/lib/types'
+import { UploadedFile, Tour, Stop, PublishResult } from '@/lib/types'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 import { DropZone } from './components/drop-zone'
 import { ProcessingLog } from './components/processing-log'
 import { ReviewPanel } from './components/review-panel'
 import { PublishPanel } from './components/publish-panel'
 
-type Screen = 'drop' | 'processing' | 'review' | 'publish'
+type Screen = 'choose' | 'drop' | 'processing' | 'review' | 'publish'
 
 interface TourProvider {
   _id: string
@@ -16,7 +17,7 @@ interface TourProvider {
 }
 
 export default function Home() {
-  const [screen, setScreen] = useState<Screen>('drop')
+  const [screen, setScreen] = useState<Screen>('choose')
   const [files, setFiles] = useState<UploadedFile[]>([])
   const [unmatchedFiles, setUnmatchedFiles] = useState<UploadedFile[]>([])
   const [tour, setTour] = useState<Tour | null>(null)
@@ -190,8 +191,33 @@ export default function Home() {
     }
   }
 
+  function handleStartManual() {
+    const emptyStop: Stop = {
+      id: crypto.randomUUID(),
+      title: '',
+      kind: 'touristAttraction',
+      details: '',
+      lat: 0,
+      lng: 0,
+    }
+    setTour({
+      title: '',
+      description: '',
+      tourType: 'walk',
+      categoryTag: '',
+      challengeLevel: 1,
+      durationRange: [60],
+      distance: 0,
+      regionId: '',
+      tourProviderId: '',
+      stops: [emptyStop],
+      routePoints: [],
+    })
+    setScreen('review')
+  }
+
   function handleReset() {
-    setScreen('drop')
+    setScreen('choose')
     setFiles([])
     setUnmatchedFiles([])
     setTour(null)
@@ -212,7 +238,7 @@ export default function Home() {
           <span className="font-heading text-base font-semibold tracking-tight">
             GoTrovare
           </span>
-          {screen !== 'drop' && (
+          {screen !== 'choose' && (
             <Button variant="ghost" size="sm" onClick={handleReset}>
               Start over
             </Button>
@@ -221,6 +247,44 @@ export default function Home() {
       </header>
 
       <div className="mx-auto max-w-2xl px-4 py-8">
+        {/* Choose path screen */}
+        {screen === 'choose' && (
+          <section className="space-y-6">
+            <div className="text-center">
+              <h1 className="text-2xl font-bold">Create a Tour</h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Choose how you want to build your tour.
+              </p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Card
+                className="cursor-pointer transition-colors hover:border-primary"
+                onClick={() => setScreen('drop')}
+              >
+                <CardContent className="pt-6 text-center space-y-3">
+                  <div className="text-4xl">✦</div>
+                  <h2 className="text-lg font-semibold">AI-Assisted</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Drop your GPX, photos, audio, and notes. AI will organize everything into a complete tour.
+                  </p>
+                </CardContent>
+              </Card>
+              <Card
+                className="cursor-pointer transition-colors hover:border-primary"
+                onClick={handleStartManual}
+              >
+                <CardContent className="pt-6 text-center space-y-3">
+                  <div className="text-4xl">✎</div>
+                  <h2 className="text-lg font-semibold">Manual</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Build your tour from scratch. Add stops, upload images, and write descriptions yourself.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          </section>
+        )}
+
         {/* Drop screen */}
         {screen === 'drop' && (
           <section className="space-y-6">

@@ -129,9 +129,30 @@ export function StopCard({ stop, index, files, onUpdate, onRemoveMedia, onReplac
         </div>
 
         {/* Coordinates */}
-        <p className="font-mono text-xs text-muted-foreground">
-          {stop.lat.toFixed(5)}, {stop.lng.toFixed(5)}
-        </p>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="flex flex-col gap-1">
+            <label className="text-xs text-muted-foreground">Latitude</label>
+            <Input
+              type="number"
+              step="any"
+              value={stop.lat || ''}
+              placeholder="0.00000"
+              onChange={(e) => onUpdate({ ...stop, lat: parseFloat(e.target.value) || 0 })}
+              className="h-7 font-mono text-xs"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs text-muted-foreground">Longitude</label>
+            <Input
+              type="number"
+              step="any"
+              value={stop.lng || ''}
+              placeholder="0.00000"
+              onChange={(e) => onUpdate({ ...stop, lng: parseFloat(e.target.value) || 0 })}
+              className="h-7 font-mono text-xs"
+            />
+          </div>
+        </div>
 
         {/* Details */}
         <div className="flex flex-col gap-1">
