@@ -490,7 +490,7 @@ export default function Home() {
       <header className="sticky top-0 z-10 border-b border-border bg-background/80 backdrop-blur">
         <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
           <span className="font-heading text-base font-semibold tracking-tight">
-            GoTrovare
+            Trovare Tour Creator
           </span>
           <div className="flex items-center gap-2">
             {screen === 'review' && (
