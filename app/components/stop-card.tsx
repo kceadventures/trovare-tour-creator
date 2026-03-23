@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { Stop, UploadedFile } from '@/lib/types'
 import { POI_KINDS } from '@/lib/constants'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
@@ -8,6 +8,13 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
 import {
   Select,
   SelectContent,
@@ -35,6 +42,9 @@ interface Props {
 
 export function StopCard({ stop, index, files, onUpdate, onRemoveMedia, onReplaceImage, replacingImage }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [suggestOpen, setSuggestOpen] = useState(false)
+  const [suggestion, setSuggestion] = useState('')
+  const [suggestSent, setSuggestSent] = useState(false)
   const matchedImage = files.find((f) => f.id === stop.imageId)
   const matchedAudio = files.find((f) => f.id === stop.audioId)
   const matchedVideo = files.find((f) => f.id === stop.videoId)
@@ -113,7 +123,15 @@ export function StopCard({ stop, index, files, onUpdate, onRemoveMedia, onReplac
           <label className="text-xs text-muted-foreground">Type</label>
           <Select
             value={stop.kind}
-            onValueChange={(val) => val && onUpdate({ ...stop, kind: val })}
+            onValueChange={(val) => {
+              if (val === '__suggest__') {
+                setSuggestOpen(true)
+                setSuggestSent(false)
+                setSuggestion('')
+              } else if (val) {
+                onUpdate({ ...stop, kind: val })
+              }
+            }}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select type" />
@@ -124,9 +142,56 @@ export function StopCard({ stop, index, files, onUpdate, onRemoveMedia, onReplac
                   {camelToReadable(k)}
                 </SelectItem>
               ))}
+              <SelectItem value="__suggest__" className="text-primary">
+                Suggest a type...
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
+
+        {/* Suggest a type dialog */}
+        <Dialog open={suggestOpen} onOpenChange={setSuggestOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Suggest a new type</DialogTitle>
+              <DialogDescription>
+                Don&apos;t see the right type for this stop? Let us know what you&apos;d like added.
+              </DialogDescription>
+            </DialogHeader>
+            {suggestSent ? (
+              <p className="text-sm text-muted-foreground py-2">
+                Thanks for your suggestion! We&apos;ll review it.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                <Input
+                  value={suggestion}
+                  onChange={(e) => setSuggestion(e.target.value)}
+                  placeholder="e.g. Vineyard, Street Art, Market..."
+                  autoFocus
+                />
+                <Button
+                  className="w-full"
+                  disabled={!suggestion.trim()}
+                  onClick={() => {
+                    fetch('/api/suggest', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        type: 'poi_kind',
+                        suggestion: suggestion.trim(),
+                        stopTitle: stop.title,
+                      }),
+                    }).catch(() => {})
+                    setSuggestSent(true)
+                  }}
+                >
+                  Submit suggestion
+                </Button>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
 
         {/* Coordinates */}
         <div className="grid grid-cols-2 gap-2">
