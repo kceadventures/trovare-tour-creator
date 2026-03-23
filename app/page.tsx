@@ -18,6 +18,40 @@ interface TourProvider {
 }
 
 const STORAGE_KEY = 'trovare_draft'
+const HISTORY_KEY = 'trovare_history'
+const MAX_HISTORY = 5
+
+interface TourHistoryEntry {
+  title: string
+  stopCount: number
+  distance: number
+  tourType: string
+  createdAt: string
+  dryRun: boolean
+}
+
+function loadHistory(): TourHistoryEntry[] {
+  if (typeof window === 'undefined') return []
+  try {
+    return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]')
+  } catch {
+    return []
+  }
+}
+
+function saveToHistory(tour: Tour, dryRun: boolean) {
+  const entry: TourHistoryEntry = {
+    title: tour.title || 'Untitled Tour',
+    stopCount: tour.stops.length,
+    distance: tour.distance,
+    tourType: tour.tourType,
+    createdAt: new Date().toISOString(),
+    dryRun,
+  }
+  const history = loadHistory()
+  history.unshift(entry)
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, MAX_HISTORY)))
+}
 
 function loadSaved() {
   if (typeof window === 'undefined') return null
@@ -177,8 +211,9 @@ export default function Home() {
       const data: PublishResult = await res.json()
       setPublishResult(data)
 
-      if (data.success && !dryRun) {
-        setScreen('publish')
+      if (data.success) {
+        saveToHistory(tour, dryRun)
+        if (!dryRun) setScreen('publish')
       }
     } catch (err) {
       setPublishResult({
@@ -453,6 +488,35 @@ export default function Home() {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Recent tours */}
+            {(() => {
+              const history = loadHistory()
+              if (!history.length) return null
+              return (
+                <div className="space-y-2">
+                  <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Recent tours</h3>
+                  <div className="space-y-1.5">
+                    {history.map((entry, i) => (
+                      <div key={i} className="flex items-center justify-between rounded-md border border-border px-3 py-2 text-sm">
+                        <div className="flex flex-col">
+                          <span className="font-medium">
+                            {entry.title}
+                            {entry.dryRun && <span className="ml-1.5 text-xs text-yellow-500">(dry run)</span>}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {entry.stopCount} stops · {entry.distance} mi · {entry.tourType}
+                          </span>
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(entry.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+            })()}
           </section>
         )}
 
