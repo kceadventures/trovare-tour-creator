@@ -21,13 +21,22 @@ const STORAGE_KEY = 'trovare_draft'
 const HISTORY_KEY = 'trovare_history'
 const MAX_HISTORY = 5
 
+interface SavedDraft {
+  screen: Screen
+  files: UploadedFile[]
+  unmatchedFiles: UploadedFile[]
+  tour: Tour | null
+}
+
 interface TourHistoryEntry {
+  id: string
   title: string
   stopCount: number
   distance: number
   tourType: string
   createdAt: string
   dryRun: boolean
+  draft: SavedDraft
 }
 
 function loadHistory(): TourHistoryEntry[] {
@@ -39,21 +48,29 @@ function loadHistory(): TourHistoryEntry[] {
   }
 }
 
-function saveToHistory(tour: Tour, dryRun: boolean) {
+function saveToHistory(tour: Tour, files: UploadedFile[], unmatchedFiles: UploadedFile[], dryRun: boolean) {
   const entry: TourHistoryEntry = {
+    id: crypto.randomUUID(),
     title: tour.title || 'Untitled Tour',
     stopCount: tour.stops.length,
     distance: tour.distance,
     tourType: tour.tourType,
     createdAt: new Date().toISOString(),
     dryRun,
+    draft: { screen: 'review', files, unmatchedFiles, tour },
   }
   const history = loadHistory()
-  history.unshift(entry)
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, MAX_HISTORY)))
+  // Dedupe by title — replace if same title exists
+  const filtered = history.filter((h) => h.title !== entry.title)
+  filtered.unshift(entry)
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(filtered.slice(0, MAX_HISTORY)))
 }
 
-function loadSaved() {
+function clearHistory() {
+  localStorage.removeItem(HISTORY_KEY)
+}
+
+function loadSaved(): SavedDraft | null {
   if (typeof window === 'undefined') return null
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
@@ -212,7 +229,7 @@ export default function Home() {
       setPublishResult(data)
 
       if (data.success) {
-        saveToHistory(tour, dryRun)
+        saveToHistory(tour, files, unmatchedFiles, dryRun)
         if (!dryRun) setScreen('publish')
       }
     } catch (err) {
@@ -378,6 +395,25 @@ export default function Home() {
     }
   }
 
+  function handleResume(entry: TourHistoryEntry) {
+    setFiles(entry.draft.files)
+    setUnmatchedFiles(entry.draft.unmatchedFiles)
+    setTour(entry.draft.tour)
+    setScreen('review')
+  }
+
+  const [historyEntries, setHistoryEntries] = useState<TourHistoryEntry[]>([])
+
+  // Load history on mount
+  useEffect(() => {
+    setHistoryEntries(loadHistory())
+  }, [screen])
+
+  function handleClearHistory() {
+    clearHistory()
+    setHistoryEntries([])
+  }
+
   function handleStartManual() {
     const emptyStop: Stop = {
       id: crypto.randomUUID(),
@@ -404,6 +440,10 @@ export default function Home() {
   }
 
   function handleReset() {
+    // Save current work to history before clearing
+    if (tour && (tour.title || tour.stops.some((s) => s.title))) {
+      saveToHistory(tour, files, unmatchedFiles, true)
+    }
     // Replace rather than push so back doesn't cycle through resets
     window.history.pushState({ screen: 'choose' }, '', '#choose')
     setScreenRaw('choose')
@@ -489,34 +529,44 @@ export default function Home() {
               </Card>
             </div>
 
-            {/* Recent tours */}
-            {(() => {
-              const history = loadHistory()
-              if (!history.length) return null
-              return (
-                <div className="space-y-2">
-                  <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Recent tours</h3>
-                  <div className="space-y-1.5">
-                    {history.map((entry, i) => (
-                      <div key={i} className="flex items-center justify-between rounded-md border border-border px-3 py-2 text-sm">
-                        <div className="flex flex-col">
-                          <span className="font-medium">
-                            {entry.title}
-                            {entry.dryRun && <span className="ml-1.5 text-xs text-yellow-500">(dry run)</span>}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {entry.stopCount} stops · {entry.distance} mi · {entry.tourType}
-                          </span>
-                        </div>
+            {/* Continue from recent tours */}
+            {historyEntries.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Continue from...</h3>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 text-xs text-muted-foreground hover:text-destructive"
+                    onClick={handleClearHistory}
+                  >
+                    Clear all
+                  </Button>
+                </div>
+                <div className="space-y-1.5">
+                  {historyEntries.map((entry) => (
+                    <button
+                      key={entry.id}
+                      className="flex w-full items-center justify-between rounded-md border border-border px-3 py-2.5 text-sm text-left transition-colors hover:border-primary hover:bg-primary/5"
+                      onClick={() => handleResume(entry)}
+                    >
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-medium">
+                          {entry.title}
+                          {entry.dryRun && <span className="ml-1.5 text-xs text-yellow-500">(draft)</span>}
+                        </span>
                         <span className="text-xs text-muted-foreground">
-                          {new Date(entry.createdAt).toLocaleDateString()}
+                          {entry.stopCount} stops · {entry.distance} mi · {entry.tourType}
                         </span>
                       </div>
-                    ))}
-                  </div>
+                      <span className="text-xs text-muted-foreground shrink-0 ml-3">
+                        {new Date(entry.createdAt).toLocaleDateString()}
+                      </span>
+                    </button>
+                  ))}
                 </div>
-              )
-            })()}
+              </div>
+            )}
           </section>
         )}
 
