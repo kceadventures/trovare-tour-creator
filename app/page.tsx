@@ -21,12 +21,8 @@ export default function Home() {
 
   // Push screen changes to browser history
   const setScreen = useCallback((next: Screen) => {
-    setScreenRaw((prev) => {
-      if (prev !== next) {
-        window.history.pushState({ screen: next }, '', `#${next}`)
-      }
-      return next
-    })
+    window.history.pushState({ screen: next }, '', `#${next}`)
+    setScreenRaw(next)
   }, [])
 
   // Handle browser back/forward
