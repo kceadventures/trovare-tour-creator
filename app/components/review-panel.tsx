@@ -189,7 +189,7 @@ export function ReviewPanel({
           <div className="flex flex-col gap-1">
             <label className="text-xs text-muted-foreground">Region</label>
             <Select
-              value={tour.regionId}
+              value={tour.regionId || undefined}
               onValueChange={(v) => {
                 if (v === '__new__') {
                   setNewRegionOpen(true)
@@ -203,7 +203,12 @@ export function ReviewPanel({
               }}
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select region" />
+                <SelectValue placeholder="Select region">
+                  {tour.regionId
+                    ? (regions.find((r) => r._id === tour.regionId)?.title ?? 'Loading...')
+                      + (tour.regionId.startsWith('drafts.') ? ' [pending]' : '')
+                    : 'Select region'}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {regions.map((r) => (
@@ -298,7 +303,7 @@ export function ReviewPanel({
               Tour Provider
             </label>
             <Select
-              value={tour.tourProviderId}
+              value={tour.tourProviderId || undefined}
               onValueChange={(v) => {
                 if (v === '__new__') {
                   setNewProviderOpen(true)
@@ -312,7 +317,12 @@ export function ReviewPanel({
               }}
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select provider" />
+                <SelectValue placeholder="Select provider">
+                  {tour.tourProviderId
+                    ? (tourProviders.find((p) => p._id === tour.tourProviderId)?.title ?? 'Loading...')
+                      + (tour.tourProviderId.startsWith('drafts.') ? ' [pending]' : '')
+                    : 'Select provider'}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {tourProviders.map((p) => (
