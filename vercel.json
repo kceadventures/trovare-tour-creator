@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "app/api/upload/route.ts": { "maxDuration": 60 },
+    "app/api/process/route.ts": { "maxDuration": 300 },
+    "app/api/publish/route.ts": { "maxDuration": 120 }
+  }
+}
