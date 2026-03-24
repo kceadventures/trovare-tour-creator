@@ -1,5 +1,7 @@
 'use client'
 
+import { motion } from 'motion/react'
+import { spring } from '@/lib/motion'
 import { Tour, PublishResult } from '@/lib/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -36,31 +38,37 @@ export function PublishPanel({
   // Success state
   if (publishResult?.success && publishResult.studioUrl) {
     return (
-      <Card className="border-green-500/40 bg-green-500/5">
-        <CardHeader>
-          <CardTitle className="text-green-600 dark:text-green-400">
-            Published!
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            Your tour has been published to Sanity.
-          </p>
-          <div className="flex flex-wrap gap-3">
-            <a
-              href={publishResult.studioUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex h-8 items-center justify-center rounded-lg bg-primary px-2.5 text-sm font-medium text-primary-foreground transition-all hover:bg-primary/80"
-            >
-              Open in Sanity Studio
-            </a>
-            <Button variant="outline" onClick={onReset}>
-              Start over
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={spring.smooth}
+      >
+        <Card className="border-green-500/40 bg-green-500/5">
+          <CardHeader>
+            <CardTitle className="text-green-600 dark:text-green-400">
+              Published!
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Your tour has been published to Sanity.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <a
+                href={publishResult.studioUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-8 items-center justify-center rounded-lg bg-primary px-2.5 text-sm font-medium text-primary-foreground transition-all hover:bg-primary/80"
+              >
+                Open in Sanity Studio
+              </a>
+              <Button variant="outline" onClick={onReset}>
+                Start over
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
     )
   }
 
@@ -68,11 +76,17 @@ export function PublishPanel({
     <div className="space-y-4">
       {/* Error display */}
       {publishResult?.error && (
-        <Card className="border-destructive/40 bg-destructive/5">
-          <CardContent className="pt-4">
-            <p className="text-sm text-destructive">{publishResult.error}</p>
-          </CardContent>
-        </Card>
+        <motion.div
+          initial={{ x: 0 }}
+          animate={{ x: [0, -4, 4, -4, 4, 0] }}
+          transition={{ duration: 0.4 }}
+        >
+          <Card className="border-destructive/40 bg-destructive/5">
+            <CardContent className="pt-4">
+              <p className="text-sm text-destructive">{publishResult.error}</p>
+            </CardContent>
+          </Card>
+        </motion.div>
       )}
 
       {/* Missing images warning */}
