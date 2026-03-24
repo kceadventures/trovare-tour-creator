@@ -1,6 +1,8 @@
 'use client'
 
 import { useRef, useState, DragEvent, ChangeEvent } from 'react'
+import { motion } from 'motion/react'
+import { spring, staggerContainer, staggerChild } from '@/lib/motion'
 import { Card, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
@@ -216,14 +218,21 @@ export function DropZone({ onFilesUploaded, uploading, setUploading }: Props) {
       )}
 
       {uploadedFiles.length > 0 && (
-        <div className="flex flex-wrap gap-2">
+        <motion.div
+          className="flex flex-wrap gap-2"
+          variants={staggerContainer(0.05)}
+          initial="hidden"
+          animate="show"
+        >
           {uploadedFiles.map((f) => (
-            <Badge key={f.id} variant="secondary" className="gap-1">
-              <span>{CATEGORY_EMOJI[f.category]}</span>
-              <span className="max-w-[160px] truncate">{f.originalName}</span>
-            </Badge>
+            <motion.div key={f.id} variants={staggerChild} transition={spring.gentle}>
+              <Badge variant="secondary" className="gap-1">
+                <span>{CATEGORY_EMOJI[f.category]}</span>
+                <span className="max-w-[160px] truncate">{f.originalName}</span>
+              </Badge>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       )}
     </div>
   )
