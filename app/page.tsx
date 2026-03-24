@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { motion, AnimatePresence } from 'motion/react'
+import { spring, staggerContainer, staggerChild } from '@/lib/motion'
 import { UploadedFile, Tour, Stop, PublishResult } from '@/lib/types'
 import { parseGPX } from '@/lib/gpx'
 import { Button } from '@/components/ui/button'
@@ -496,7 +498,7 @@ export default function Home() {
             Trovare Tour Creator
           </button>
           <div className="flex items-center gap-2">
-            {screen === 'review' && (
+            {hydrated && screen === 'review' && (
               <>
                 {savedNotice && (
                   <span className="text-xs text-primary animate-in fade-in">Saved!</span>
@@ -506,7 +508,7 @@ export default function Home() {
                 </Button>
               </>
             )}
-            {screen !== 'choose' && (
+            {hydrated && screen !== 'choose' && (
               <Button variant="ghost" size="sm" onClick={handleReset}>
                 Start over
               </Button>
@@ -516,9 +518,17 @@ export default function Home() {
       </header>
 
       <div className="mx-auto max-w-2xl px-4 py-8">
+        <AnimatePresence mode="wait" initial={false}>
         {/* Choose path screen */}
         {screen === 'choose' && (
-          <section className="space-y-6">
+          <motion.section
+            key="choose"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 4 }}
+            transition={spring.smooth}
+            className="space-y-6"
+          >
             <div className="text-center">
               <h1 className="text-2xl font-bold">Create a Tour</h1>
               <p className="mt-1 text-sm text-muted-foreground">
@@ -581,10 +591,17 @@ export default function Home() {
                     Clear all
                   </Button>
                 </div>
-                <div className="space-y-1.5">
+                <motion.div
+                  className="space-y-1.5"
+                  variants={staggerContainer()}
+                  initial="hidden"
+                  animate="show"
+                >
                   {historyEntries.map((entry) => (
-                    <div
+                    <motion.div
                       key={entry.id}
+                      variants={staggerChild}
+                      transition={spring.gentle}
                       className="flex w-full items-center gap-2 rounded-md border border-border text-sm transition-colors hover:border-primary hover:bg-primary/5"
                     >
                       <button
@@ -615,17 +632,24 @@ export default function Home() {
                       >
                         ×
                       </button>
-                    </div>
+                    </motion.div>
                   ))}
-                </div>
+                </motion.div>
               </div>
             )}
-          </section>
+          </motion.section>
         )}
 
         {/* Drop screen */}
         {screen === 'drop' && (
-          <section className="space-y-6">
+          <motion.section
+            key="drop"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 4 }}
+            transition={spring.smooth}
+            className="space-y-6"
+          >
             <div>
               <h1 className="text-2xl font-bold">Upload a Tour</h1>
               <p className="mt-1 text-sm text-muted-foreground">
@@ -646,19 +670,33 @@ export default function Home() {
                 Build tour with AI
               </Button>
             )}
-          </section>
+          </motion.section>
         )}
 
         {/* Processing screen */}
         {screen === 'processing' && (
-          <section className="space-y-4">
+          <motion.section
+            key="processing"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 4 }}
+            transition={spring.smooth}
+            className="space-y-4"
+          >
             <ProcessingLog messages={logMessages} processing={processing} progress={processProgress} />
-          </section>
+          </motion.section>
         )}
 
         {/* Review screen */}
         {(screen === 'review' || screen === 'publish') && tour && (
-          <section className="space-y-6">
+          <motion.section
+            key="review"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 4 }}
+            transition={spring.smooth}
+            className="space-y-6"
+          >
             {screen === 'review' && (
               <>
                 <div>
@@ -692,12 +730,18 @@ export default function Home() {
               onPublish={handlePublish}
               onReset={handleReset}
             />
-          </section>
+          </motion.section>
         )}
 
         {/* Publish success screen (handled inside PublishPanel) */}
         {screen === 'publish' && !tour && (
-          <section>
+          <motion.section
+            key="publish-success"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 4 }}
+            transition={spring.smooth}
+          >
             <PublishPanel
               tour={null}
               publishResult={publishResult}
@@ -705,8 +749,9 @@ export default function Home() {
               onPublish={handlePublish}
               onReset={handleReset}
             />
-          </section>
+          </motion.section>
         )}
+        </AnimatePresence>
       </div>
     </main>
   )
