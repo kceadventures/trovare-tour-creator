@@ -30,6 +30,7 @@ import {
 import { StopCard } from './stop-card'
 import { MediaAssignment } from './media-assignment'
 import { RoutePreview } from './route-preview'
+import { LocationInput } from './location-input'
 
 interface TourProvider {
   _id: string
@@ -79,8 +80,7 @@ export function ReviewPanel({
   const [newRegionOpen, setNewRegionOpen] = useState(false)
   const [newRegionTitle, setNewRegionTitle] = useState('')
   const [newRegionDesc, setNewRegionDesc] = useState('')
-  const [newRegionLat, setNewRegionLat] = useState('')
-  const [newRegionLng, setNewRegionLng] = useState('')
+  const [newRegionCoords, setNewRegionCoords] = useState({ lat: 0, lng: 0 })
   const [creatingRegion, setCreatingRegion] = useState(false)
 
   const [newProviderOpen, setNewProviderOpen] = useState(false)
@@ -204,8 +204,7 @@ export function ReviewPanel({
                   setNewRegionOpen(true)
                   setNewRegionTitle('')
                   setNewRegionDesc('')
-                  setNewRegionLat('')
-                  setNewRegionLng('')
+                  setNewRegionCoords({ lat: 0, lng: 0 })
                 } else if (v === '__none__') {
                   onTourUpdate({ ...tour, regionId: '' })
                 } else if (v) {
@@ -265,28 +264,12 @@ export function ReviewPanel({
                     rows={2}
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs text-muted-foreground">Latitude</label>
-                    <Input
-                      type="number"
-                      step="any"
-                      value={newRegionLat}
-                      onChange={(e) => setNewRegionLat(e.target.value)}
-                      placeholder="41.14961"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs text-muted-foreground">Longitude</label>
-                    <Input
-                      type="number"
-                      step="any"
-                      value={newRegionLng}
-                      onChange={(e) => setNewRegionLng(e.target.value)}
-                      placeholder="-8.61099"
-                    />
-                  </div>
-                </div>
+                <LocationInput
+                  lat={newRegionCoords.lat}
+                  lng={newRegionCoords.lng}
+                  onChange={(lat, lng) => setNewRegionCoords({ lat, lng })}
+                  layoutIdPrefix="location-new-region"
+                />
                 <Button
                   className="w-full"
                   disabled={!newRegionTitle.trim() || creatingRegion}
@@ -295,8 +278,8 @@ export function ReviewPanel({
                     const created = await onCreateRegion({
                       title: newRegionTitle.trim(),
                       description: newRegionDesc.trim(),
-                      lat: newRegionLat ? parseFloat(newRegionLat) : undefined,
-                      lng: newRegionLng ? parseFloat(newRegionLng) : undefined,
+                      lat: newRegionCoords.lat !== 0 ? newRegionCoords.lat : undefined,
+                      lng: newRegionCoords.lng !== 0 ? newRegionCoords.lng : undefined,
                     })
                     setCreatingRegion(false)
                     if (created) {
