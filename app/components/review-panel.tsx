@@ -1,6 +1,8 @@
 'use client'
 
 import { useRef, useState } from 'react'
+import { motion } from 'motion/react'
+import { spring, staggerContainer, staggerChild } from '@/lib/motion'
 import { FileUp, Download, X } from 'lucide-react'
 import { Tour, UploadedFile, Stop } from '@/lib/types'
 import {
@@ -561,21 +563,27 @@ export function ReviewPanel({
       />
 
       {/* Stop list */}
-      <div className="space-y-4">
+      <motion.div
+        className="space-y-4"
+        variants={staggerContainer(0.06)}
+        initial="hidden"
+        animate="show"
+      >
         {tour.stops.map((stop, i) => (
-          <StopCard
-            key={stop.id}
-            stop={stop}
-            index={i}
-            files={files}
-            onUpdate={(updated) => updateStop(i, updated)}
-            onRemove={(stopId) => {
-              onTourUpdate({ ...tour, stops: tour.stops.filter((s) => s.id !== stopId) })
-            }}
-            onRemoveMedia={onRemoveMedia}
-            onReplaceImage={onReplaceImage}
-            replacingImage={replacingImageStopId === stop.id}
-          />
+          <motion.div key={stop.id} variants={staggerChild} transition={spring.gentle}>
+            <StopCard
+              stop={stop}
+              index={i}
+              files={files}
+              onUpdate={(updated) => updateStop(i, updated)}
+              onRemove={(stopId) => {
+                onTourUpdate({ ...tour, stops: tour.stops.filter((s) => s.id !== stopId) })
+              }}
+              onRemoveMedia={onRemoveMedia}
+              onReplaceImage={onReplaceImage}
+              replacingImage={replacingImageStopId === stop.id}
+            />
+          </motion.div>
         ))}
         <Button
           variant="outline"
@@ -594,7 +602,7 @@ export function ReviewPanel({
         >
           + Add stop
         </Button>
-      </div>
+      </motion.div>
     </div>
   )
 }
