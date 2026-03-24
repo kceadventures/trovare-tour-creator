@@ -1,8 +1,10 @@
 "use client"
 
 import { Progress as ProgressPrimitive } from "@base-ui/react/progress"
+import { motion } from "motion/react"
 
 import { cn } from "@/lib/utils"
+import { spring } from "@/lib/motion"
 
 function Progress({
   className,
@@ -45,7 +47,8 @@ function ProgressIndicator({
   return (
     <ProgressPrimitive.Indicator
       data-slot="progress-indicator"
-      className={cn("h-full bg-primary transition-all", className)}
+      className={cn("h-full bg-primary", className)}
+      render={<motion.div transition={spring.smooth} />}
       {...props}
     />
   )
