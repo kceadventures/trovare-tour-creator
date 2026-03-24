@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect } from 'react'
+import { motion } from 'motion/react'
+import { spring } from '@/lib/motion'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 
@@ -43,9 +45,15 @@ export function ProcessingLog({ messages, processing, progress }: Props) {
         </div>
         <div className="bg-muted rounded-lg p-4 max-h-60 overflow-y-auto font-mono text-xs space-y-1">
           {messages.map((msg, i) => (
-            <div key={i} className="text-muted-foreground">
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, x: -12 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ ...spring.gentle, delay: Math.min(i * 0.02, 0.5) }}
+              className="text-muted-foreground"
+            >
               {msg}
-            </div>
+            </motion.div>
           ))}
           {processing && (
             <div className="animate-pulse text-primary">...</div>
