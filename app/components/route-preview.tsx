@@ -1,5 +1,8 @@
 'use client'
 
+import { motion } from 'motion/react'
+import { spring } from '@/lib/motion'
+
 interface Point {
   lat: number
   lng: number
@@ -61,20 +64,29 @@ export function RoutePreview({ routePoints, stops }: RoutePreviewProps) {
     >
       <rect width={width} height={height} rx="8" className="fill-muted" />
       {path && (
-        <path
+        <motion.path
           d={path}
           fill="none"
           stroke="#1D9E75"
           strokeWidth="2.5"
           strokeLinecap="round"
           strokeLinejoin="round"
+          initial={{ pathLength: 0 }}
+          animate={{ pathLength: 1 }}
+          transition={{ duration: 1.5, ease: "easeOut" }}
         />
       )}
-      {stops.map((s) => {
+      {stops.map((s, i) => {
         const cx = toX(s.lng)
         const cy = toY(s.lat)
         return (
-          <g key={s.index}>
+          <motion.g
+            key={s.index}
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ ...spring.snappy, delay: 0.3 + i * 0.1 }}
+            style={{ transformOrigin: `${cx}px ${cy}px` }}
+          >
             <circle cx={cx} cy={cy} r="10" fill="#1D9E75" />
             <text
               x={cx}
@@ -86,7 +98,7 @@ export function RoutePreview({ routePoints, stops }: RoutePreviewProps) {
             >
               {s.index + 1}
             </text>
-          </g>
+          </motion.g>
         )
       })}
     </svg>
