@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { motion, AnimatePresence } from 'motion/react'
+import { spring, staggerContainer, staggerChild } from '@/lib/motion'
 import { DryRunOutput } from '@/lib/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -65,37 +67,49 @@ export function DryRunOutputPanel({ data }: Props) {
             <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Documents ({data.documents.length})
             </h3>
-            <div className="space-y-2">
+            <motion.div
+              className="space-y-2"
+              variants={staggerContainer(0.04)}
+              initial="hidden"
+              animate="show"
+            >
               {data.documents.map((doc) => (
-                <div
-                  key={doc._id}
-                  className="rounded-lg border border-border bg-muted/30"
-                >
-                  <button
-                    type="button"
-                    onClick={() => toggleDoc(doc._id)}
-                    className="flex w-full items-center justify-between px-3 py-2 text-left text-xs font-medium"
-                  >
-                    <span className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-[10px]">
-                        {doc._type}
-                      </Badge>
-                      <span className="font-mono text-muted-foreground">
-                        {doc._id}
+                <motion.div key={doc._id} variants={staggerChild} transition={spring.gentle}>
+                  <div className="rounded-lg border border-border bg-muted/30">
+                    <button
+                      type="button"
+                      onClick={() => toggleDoc(doc._id)}
+                      className="flex w-full items-center justify-between px-3 py-2 text-left text-xs font-medium"
+                    >
+                      <span className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-[10px]">
+                          {doc._type}
+                        </Badge>
+                        <span className="font-mono text-muted-foreground">
+                          {doc._id}
+                        </span>
                       </span>
-                    </span>
-                    <span className="text-muted-foreground">
-                      {openDocs.has(doc._id) ? '▲' : '▼'}
-                    </span>
-                  </button>
-                  {openDocs.has(doc._id) && (
-                    <pre className="overflow-x-auto rounded-b-lg bg-background px-3 pb-3 text-[11px] text-foreground">
-                      {JSON.stringify(doc, null, 2)}
-                    </pre>
-                  )}
-                </div>
+                      <span className="text-muted-foreground">
+                        {openDocs.has(doc._id) ? '▲' : '▼'}
+                      </span>
+                    </button>
+                    <AnimatePresence>
+                      {openDocs.has(doc._id) && (
+                        <motion.pre
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={spring.smooth}
+                          className="overflow-hidden rounded-b-lg bg-background px-3 pb-3 text-[11px] text-foreground"
+                        >
+                          {JSON.stringify(doc, null, 2)}
+                        </motion.pre>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           </section>
         )}
 
