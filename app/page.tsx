@@ -11,6 +11,7 @@ import { DropZone } from './components/drop-zone'
 import { ProcessingLog } from './components/processing-log'
 import { ReviewPanel } from './components/review-panel'
 import { PublishPanel } from './components/publish-panel'
+import { ThemeToggle } from './components/theme-toggle'
 
 type Screen = 'choose' | 'drop' | 'processing' | 'review' | 'publish'
 
@@ -138,6 +139,7 @@ export default function Home() {
   }, [screen, files, unmatchedFiles, tour, hydrated])
   const [tourProviders, setTourProviders] = useState<TourProvider[]>([])
   const [regions, setRegions] = useState<{ _id: string; title: string }[]>([])
+  const [collections, setCollections] = useState<{ _id: string; title: string }[]>([])
   const [logMessages, setLogMessages] = useState<string[]>([])
   const [processProgress, setProcessProgress] = useState(0)
   const [processing, setProcessing] = useState(false)
@@ -160,7 +162,13 @@ export default function Home() {
         .then((data) => { if (Array.isArray(data)) setRegions(data) })
         .catch(() => {})
     }
-  }, [screen, tourProviders.length, regions.length])
+    if (collections.length === 0) {
+      fetch('/api/collections')
+        .then((r) => r.json())
+        .then((data) => { if (Array.isArray(data)) setCollections(data) })
+        .catch(() => {})
+    }
+  }, [screen, tourProviders.length, regions.length, collections.length])
 
   function addLog(msg: string) {
     setLogMessages((prev) => [...prev, msg])
@@ -410,6 +418,22 @@ export default function Home() {
     }
   }
 
+  async function handleCreateCollection(data: { title: string; description: string }) {
+    try {
+      const res = await fetch('/api/collections/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+      if (!res.ok) return null
+      const created = await res.json()
+      setCollections((prev) => [...prev, { _id: created._id, title: created.title }])
+      return created as { _id: string; title: string }
+    } catch {
+      return null
+    }
+  }
+
   function handleResume(entry: TourHistoryEntry) {
     setFiles(entry.draft.files)
     setUnmatchedFiles(entry.draft.unmatchedFiles)
@@ -498,6 +522,7 @@ export default function Home() {
             Trovare Tour Creator
           </button>
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             {hydrated && screen === 'review' && (
               <>
                 {savedNotice && (
@@ -523,7 +548,7 @@ export default function Home() {
         {screen === 'choose' && (
           <motion.section
             key="choose"
-            initial={{ opacity: 0, y: 8 }}
+            initial={hydrated ? { opacity: 0, y: 8 } : false}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 4 }}
             transition={spring.smooth}
@@ -591,17 +616,16 @@ export default function Home() {
                     Clear all
                   </Button>
                 </div>
-                <motion.div
-                  className="space-y-1.5"
-                  variants={staggerContainer()}
-                  initial="hidden"
-                  animate="show"
-                >
+                <div className="space-y-1.5">
+                <AnimatePresence initial={false}>
                   {historyEntries.map((entry) => (
                     <motion.div
                       key={entry.id}
-                      variants={staggerChild}
-                      transition={spring.gentle}
+                      initial={{ opacity: 0, x: -8 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 40 }}
+                      transition={spring.smooth}
+                      layout
                       className="flex w-full items-center gap-2 rounded-md border border-border text-sm transition-colors hover:border-primary hover:bg-primary/5"
                     >
                       <button
@@ -634,7 +658,8 @@ export default function Home() {
                       </button>
                     </motion.div>
                   ))}
-                </motion.div>
+                </AnimatePresence>
+                </div>
               </div>
             )}
           </motion.section>
@@ -700,7 +725,7 @@ export default function Home() {
             {screen === 'review' && (
               <>
                 <div>
-                  <h1 className="text-2xl font-bold">Review Tour</h1>
+                  <h1 className="text-2xl font-bold">Create New Tour</h1>
                   <p className="mt-1 text-sm text-muted-foreground">
                     Check and edit the generated tour before publishing.
                   </p>
@@ -718,6 +743,8 @@ export default function Home() {
                   onCreateProvider={handleCreateProvider}
                   regions={regions}
                   onCreateRegion={handleCreateRegion}
+                  collections={collections}
+                  onCreateCollection={handleCreateCollection}
                   onUploadGpx={handleUploadGpx}
                   uploadingGpx={uploadingGpx}
                 />

@@ -126,6 +126,20 @@ export async function POST(req: NextRequest) {
   }
   assets.push({ filename: 'map.png', type: 'image', size: mapBuf.length, destination: 'Sanity CDN' })
 
+  let previewRef: Record<string, unknown> | undefined
+  if (tour.previewImageId) {
+    const previewFile = fileMap.get(tour.previewImageId)
+    if (previewFile) {
+      if (!testingMode) {
+        const imgRes = await fetch(previewFile.url)
+        const imgBuf = Buffer.from(await imgRes.arrayBuffer())
+        const assetId = await uploadSanityAsset(imgBuf, 'image', previewFile.originalName, 'image/jpeg')
+        previewRef = { _type: 'image', asset: { _type: 'reference', _ref: assetId } }
+      }
+      assets.push({ filename: previewFile.originalName, type: 'image', size: previewFile.size, destination: 'Sanity CDN' })
+    }
+  }
+
   const tourId = 'drafts.' + genId()
   const tourDoc: DryRunDocument = {
     _id: tourId,
@@ -139,6 +153,7 @@ export async function POST(req: NextRequest) {
     durationRange: tour.durationRange,
     ...(routeFileRef ? { routeFile: routeFileRef } : {}),
     ...(mapImageRef ? { mapImage: mapImageRef } : {}),
+    ...(previewRef ? { preview: previewRef } : {}),
     pointsOfInterest: poiDocs.map(p => ({
       _type: 'reference', _ref: p._id, _key: (p._id as string).slice(-10),
     })),
@@ -151,6 +166,10 @@ export async function POST(req: NextRequest) {
   if (tour.tourProviderId) {
     tourDoc.tourProvider = { _type: 'reference', _ref: tour.tourProviderId }
     references.push({ from: tourId, to: tour.tourProviderId, field: 'tourProvider' })
+  }
+
+  if (tour.collectionId) {
+    references.push({ from: tour.collectionId, to: tourId, field: 'tours' })
   }
 
   if (testingMode) {
@@ -170,6 +189,15 @@ export async function POST(req: NextRequest) {
     }
     transaction.createOrReplace(tourDoc as any)
     await transaction.commit()
+
+    // Add tour to collection if specified
+    if (tour.collectionId) {
+      await sanity
+        .patch(tour.collectionId)
+        .setIfMissing({ tours: [] })
+        .append('tours', [{ _type: 'reference', _ref: tourId, _key: tourId.slice(-10) }])
+        .commit()
+    }
 
     return NextResponse.json({
       success: true,

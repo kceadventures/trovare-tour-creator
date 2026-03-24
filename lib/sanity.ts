@@ -27,3 +27,7 @@ export async function fetchTourProviders(): Promise<{ _id: string; title: string
 export async function fetchRegions(): Promise<{ _id: string; title: string }[]> {
   return sanity.fetch('*[_type == "region"]{_id, title} | order(title asc)')
 }
+
+export async function fetchCollections(): Promise<{ _id: string; title: string }[]> {
+  return sanity.fetch('*[_type == "curatedTourCollection"]{_id, title} | order(title asc)')
+}

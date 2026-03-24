@@ -1,0 +1,99 @@
+<h2>Location Input: Tabbed Interface</h2>
+<p class="subtitle">Address search vs manual coordinates — two approaches for the tab design</p>
+
+<div class="cards">
+
+  <!-- Option A: Inline mini-tabs -->
+  <div class="card" data-choice="inline-tabs" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding: 24px; background: #0a0a0a;">
+      <!-- Mock stop card snippet -->
+      <div style="background: #141414; border: 1px solid #262626; border-radius: 10px; padding: 16px; max-width: 400px; margin: 0 auto;">
+        <div style="font-size: 13px; color: #888; margin-bottom: 8px;">Stop 1 — Location</div>
+
+        <!-- Tab row -->
+        <div style="display: flex; gap: 0; margin-bottom: 12px; border-bottom: 1px solid #262626;">
+          <button style="padding: 6px 14px; font-size: 12px; color: #e0e0e0; background: transparent; border: none; border-bottom: 2px solid #e0e0e0; cursor: pointer; font-weight: 600;">Search</button>
+          <button style="padding: 6px 14px; font-size: 12px; color: #666; background: transparent; border: none; border-bottom: 2px solid transparent; cursor: pointer;">Coordinates</button>
+        </div>
+
+        <!-- Search tab content -->
+        <div style="position: relative;">
+          <input type="text" placeholder="Search for an address..." style="width: 100%; padding: 8px 12px; background: #1a1a1a; border: 1px solid #333; border-radius: 6px; color: #e0e0e0; font-size: 13px; box-sizing: border-box;" />
+
+          <!-- Autocomplete dropdown -->
+          <div style="position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; background: #1a1a1a; border: 1px solid #333; border-radius: 6px; overflow: hidden; z-index: 10;">
+            <div style="padding: 10px 12px; font-size: 12px; color: #ccc; border-bottom: 1px solid #222; cursor: pointer; display: flex; align-items: flex-start; gap: 8px;">
+              <span style="color: #666; margin-top: 1px;">📍</span>
+              <div>
+                <div style="font-weight: 500;">Piazza del Colosseo</div>
+                <div style="color: #666; font-size: 11px; margin-top: 2px;">Rome, Metropolitan City of Rome, Italy</div>
+              </div>
+            </div>
+            <div style="padding: 10px 12px; font-size: 12px; color: #ccc; cursor: pointer; display: flex; align-items: flex-start; gap: 8px;">
+              <span style="color: #666; margin-top: 1px;">📍</span>
+              <div>
+                <div style="font-weight: 500;">Colosseum Square</div>
+                <div style="color: #666; font-size: 11px; margin-top: 2px;">Via dei Fori Imperiali, Rome, Italy</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filled state preview -->
+        <div style="margin-top: 52px; padding-top: 12px; border-top: 1px solid #1a1a1a;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 11px; color: #555; font-family: monospace;">41.8902° N, 12.4922° E</span>
+            <span style="font-size: 10px; color: #444;">auto-filled</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A: Underline Tabs</h3>
+      <p>Compact tab row with underline indicator. Search is default tab. Shows resolved coords as small monospace text below when address is selected. Coordinates tab reveals the raw lat/lng inputs.</p>
+    </div>
+  </div>
+
+  <!-- Option B: Segmented control -->
+  <div class="card" data-choice="segmented" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding: 24px; background: #0a0a0a;">
+      <!-- Mock stop card snippet -->
+      <div style="background: #141414; border: 1px solid #262626; border-radius: 10px; padding: 16px; max-width: 400px; margin: 0 auto;">
+        <div style="font-size: 13px; color: #888; margin-bottom: 8px;">Stop 1 — Location</div>
+
+        <!-- Segmented control -->
+        <div style="display: flex; background: #1a1a1a; border-radius: 6px; padding: 2px; margin-bottom: 12px;">
+          <button style="flex: 1; padding: 5px 0; font-size: 11px; color: #e0e0e0; background: #2a2a2a; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,.3);">🔍 Search</button>
+          <button style="flex: 1; padding: 5px 0; font-size: 11px; color: #666; background: transparent; border: none; border-radius: 5px; cursor: pointer;">📐 Lat/Lng</button>
+        </div>
+
+        <!-- Search content -->
+        <div style="position: relative;">
+          <input type="text" placeholder="Search for an address..." style="width: 100%; padding: 8px 12px; background: #1a1a1a; border: 1px solid #333; border-radius: 6px; color: #e0e0e0; font-size: 13px; box-sizing: border-box;" />
+        </div>
+
+        <!-- Already-filled state -->
+        <div style="margin-top: 12px; background: #1a2a1a; border: 1px solid #2a3a2a; border-radius: 6px; padding: 8px 12px;">
+          <div style="font-size: 12px; color: #8c8;">Piazza del Colosseo, Rome</div>
+          <div style="font-size: 11px; color: #555; font-family: monospace; margin-top: 2px;">41.8902, 12.4922</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B: Segmented Control</h3>
+      <p>iOS-style pill toggle. More visual weight, clearer active state. Selected address shows in a green-tinted confirmation box with both name and coordinates. Feels more "appy".</p>
+    </div>
+  </div>
+
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>Behavior (both options)</h3>
+  <ul style="color: #aaa; font-size: 14px; line-height: 2; padding-left: 20px;">
+    <li><strong>Search tab:</strong> Debounced Nominatim autocomplete (300ms). Select result → auto-fills lat/lng. Shows resolved coords as confirmation.</li>
+    <li><strong>Coordinates tab:</strong> Same raw lat/lng number inputs as today. Unchanged.</li>
+    <li><strong>Default tab:</strong> "Search" when coords are empty, "Coordinates" when coords already populated (e.g. from GPX).</li>
+    <li><strong>Switching tabs:</strong> Preserves values — switching to Coordinates after a search shows the auto-filled values, editable.</li>
+    <li><strong>Same component</strong> reused in both stop cards and new region creation dialog.</li>
+  </ul>
+</div>

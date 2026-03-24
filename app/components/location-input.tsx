@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { MapPin, Loader2 } from 'lucide-react'
+import { MapPin, Loader2, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 import { Input } from '@/components/ui/input'
 import { spring } from '@/lib/motion'
@@ -34,6 +34,7 @@ export function LocationInput({ lat, lng, onChange, layoutIdPrefix = 'location' 
   const [highlightIndex, setHighlightIndex] = useState(-1)
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const justSelectedRef = useRef(false)
 
   const search = useCallback(async (q: string) => {
     if (q.length < 3) {
@@ -68,6 +69,10 @@ export function LocationInput({ lat, lng, onChange, layoutIdPrefix = 'location' 
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
+    if (justSelectedRef.current) {
+      justSelectedRef.current = false
+      return
+    }
     if (query.length < 3) {
       setResults([])
       setShowDropdown(false)
@@ -78,8 +83,9 @@ export function LocationInput({ lat, lng, onChange, layoutIdPrefix = 'location' 
   }, [query, search])
 
   function selectResult(result: GeocodeSuggestion) {
+    justSelectedRef.current = true
     onChange(result.lat, result.lon)
-    setSelectedName(result.display_name.split(',')[0])
+    setSelectedName(result.display_name)
     setQuery(result.display_name.split(',')[0])
     setShowDropdown(false)
     setResults([])
@@ -99,6 +105,12 @@ export function LocationInput({ lat, lng, onChange, layoutIdPrefix = 'location' 
     } else if (e.key === 'Escape') {
       setShowDropdown(false)
     }
+  }
+
+  function clearLocation() {
+    setSelectedName('')
+    setQuery('')
+    onChange(0, 0)
   }
 
   const tabs = ['search', 'coords'] as const
@@ -208,17 +220,30 @@ export function LocationInput({ lat, lng, onChange, layoutIdPrefix = 'location' 
               </AnimatePresence>
             </div>
 
-            {/* Resolved coordinates */}
+            {/* Selected location */}
             {selectedName && hasCoords && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="mt-1.5 flex items-center justify-between"
+                className="mt-1.5 rounded-md border border-border bg-muted/30 px-2.5 py-2"
               >
-                <span className="font-mono text-[11px] text-muted-foreground">
-                  {Math.abs(lat).toFixed(5)}° {lat >= 0 ? 'N' : 'S'}, {Math.abs(lng).toFixed(5)}° {lng >= 0 ? 'E' : 'W'}
-                </span>
-                <span className="text-[10px] text-muted-foreground/60">auto-filled</span>
+                <div className="flex items-start gap-1.5">
+                  <MapPin className="mt-0.5 h-3 w-3 shrink-0 text-primary" />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-medium">{selectedName.split(',')[0]}</div>
+                    <div className="text-[11px] text-muted-foreground">{selectedName.split(',').slice(1).join(',').trim()}</div>
+                    <div className="font-mono text-[11px] text-muted-foreground/60 mt-0.5">
+                      {Math.abs(lat).toFixed(5)}° {lat >= 0 ? 'N' : 'S'}, {Math.abs(lng).toFixed(5)}° {lng >= 0 ? 'E' : 'W'}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={clearLocation}
+                    className="shrink-0 p-0.5 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
               </motion.div>
             )}
           </motion.div>
@@ -231,29 +256,49 @@ export function LocationInput({ lat, lng, onChange, layoutIdPrefix = 'location' 
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="grid grid-cols-2 gap-2"
+            className="space-y-2"
           >
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-muted-foreground">Latitude</label>
-              <Input
-                type="number"
-                step="any"
-                value={lat !== 0 ? lat : ''}
-                placeholder="0.00000"
-                onChange={(e) => onChange(parseFloat(e.target.value) || 0, lng)}
-                className="h-7 font-mono text-xs"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-muted-foreground">Longitude</label>
-              <Input
-                type="number"
-                step="any"
-                value={lng !== 0 ? lng : ''}
-                placeholder="0.00000"
-                onChange={(e) => onChange(lat, parseFloat(e.target.value) || 0)}
-                className="h-7 font-mono text-xs"
-              />
+            {selectedName && (
+              <div className="rounded-md border border-border bg-muted/30 px-2.5 py-2">
+                <div className="flex items-start gap-1.5">
+                  <MapPin className="mt-0.5 h-3 w-3 shrink-0 text-primary" />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-medium">{selectedName.split(',')[0]}</div>
+                    <div className="text-[11px] text-muted-foreground">{selectedName.split(',').slice(1).join(',').trim()}</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={clearLocation}
+                    className="shrink-0 p-0.5 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              </div>
+            )}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="flex flex-col gap-1">
+                <label className="text-xs text-muted-foreground">Latitude</label>
+                <Input
+                  type="number"
+                  step="any"
+                  value={lat !== 0 ? lat : ''}
+                  placeholder="0.00000"
+                  onChange={(e) => { onChange(parseFloat(e.target.value) || 0, lng); setSelectedName('') }}
+                  className="h-7 font-mono text-xs"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs text-muted-foreground">Longitude</label>
+                <Input
+                  type="number"
+                  step="any"
+                  value={lng !== 0 ? lng : ''}
+                  placeholder="0.00000"
+                  onChange={(e) => { onChange(lat, parseFloat(e.target.value) || 0); setSelectedName('') }}
+                  className="h-7 font-mono text-xs"
+                />
+              </div>
             </div>
           </motion.div>
         )}

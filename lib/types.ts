@@ -45,6 +45,8 @@ export interface Tour {
   stops: Stop[]
   routePoints: { lat: number; lng: number; ts?: number }[]
   gpxFileId?: string
+  collectionId?: string
+  previewImageId?: string
   duplicateWarning?: DuplicateWarning
 }
 

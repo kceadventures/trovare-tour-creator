@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { motion } from 'motion/react'
+import { motion, AnimatePresence } from 'motion/react'
 import { spring, staggerContainer, staggerChild } from '@/lib/motion'
 import { FileUp, Download, X } from 'lucide-react'
 import { Tour, UploadedFile, Stop } from '@/lib/types'
@@ -50,6 +50,8 @@ interface Props {
   onCreateProvider: (data: { name: string; email: string; description: string; website: string }) => Promise<TourProvider | null>
   regions: { _id: string; title: string }[]
   onCreateRegion: (data: { title: string; description: string; lat?: number; lng?: number }) => Promise<{ _id: string; title: string } | null>
+  collections: { _id: string; title: string }[]
+  onCreateCollection: (data: { title: string; description: string }) => Promise<{ _id: string; title: string } | null>
   onUploadGpx: (file: File) => Promise<void>
   uploadingGpx?: boolean
 }
@@ -73,6 +75,8 @@ export function ReviewPanel({
   onCreateProvider,
   regions,
   onCreateRegion,
+  collections,
+  onCreateCollection,
   onUploadGpx,
   uploadingGpx,
 }: Props) {
@@ -89,6 +93,35 @@ export function ReviewPanel({
   const [newProviderDesc, setNewProviderDesc] = useState('')
   const [newProviderWebsite, setNewProviderWebsite] = useState('')
   const [creatingProvider, setCreatingProvider] = useState(false)
+
+  const [suggestCategoryOpen, setSuggestCategoryOpen] = useState(false)
+  const [categorySuggestion, setCategorySuggestion] = useState('')
+  const [categorySuggestSent, setCategorySuggestSent] = useState(false)
+
+  const [newCollectionOpen, setNewCollectionOpen] = useState(false)
+  const [newCollectionTitle, setNewCollectionTitle] = useState('')
+  const [newCollectionDesc, setNewCollectionDesc] = useState('')
+  const [creatingCollection, setCreatingCollection] = useState(false)
+
+  const previewInputRef = useRef<HTMLInputElement>(null)
+  const [uploadingPreview, setUploadingPreview] = useState(false)
+
+  async function handlePreviewUpload(file: File) {
+    setUploadingPreview(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await fetch('/api/upload', { method: 'POST', body: formData })
+      if (!res.ok) throw new Error('Upload failed')
+      const uploaded: UploadedFile = await res.json()
+      onTourUpdate({ ...tour, previewImageId: uploaded.id })
+    } catch (e) {
+      console.error('Preview upload failed:', e)
+    } finally {
+      setUploadingPreview(false)
+    }
+  }
+
   function updateStop(index: number, updated: Stop) {
     const stops = [...tour.stops]
     stops[index] = updated
@@ -114,6 +147,62 @@ export function ReviewPanel({
               value={tour.title}
               placeholder="Tour title"
               onChange={(e) => onTourUpdate({ ...tour, title: e.target.value })}
+            />
+          </div>
+
+          {/* Main Tour Image */}
+          <div className="flex flex-col gap-1 sm:col-span-2">
+            <label className="text-xs text-muted-foreground">Main Tour Image</label>
+            {(() => {
+              const previewFile = tour.previewImageId ? files.find((f) => f.id === tour.previewImageId) : null
+              return previewFile ? (
+                <div className="relative group">
+                  <img
+                    src={previewFile.url}
+                    alt={tour.title || 'Tour preview'}
+                    className="w-full h-40 object-cover rounded-md border border-border"
+                  />
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-md flex items-center justify-center gap-2">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => previewInputRef.current?.click()}
+                      disabled={uploadingPreview}
+                    >
+                      {uploadingPreview ? 'Uploading...' : 'Replace'}
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => onTourUpdate({ ...tour, previewImageId: undefined })}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1 truncate">{previewFile.originalName}</p>
+                </div>
+              ) : (
+                <div
+                  className="w-full h-32 border-2 border-dashed border-muted-foreground/25 rounded-md flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-primary/50 transition-colors"
+                  onClick={() => previewInputRef.current?.click()}
+                >
+                  <span className="text-2xl text-muted-foreground/50">🖼️</span>
+                  <span className="text-xs text-muted-foreground">
+                    {uploadingPreview ? 'Uploading...' : 'Click to add main tour image'}
+                  </span>
+                </div>
+              )
+            })()}
+            <input
+              ref={previewInputRef}
+              type="file"
+              accept=".jpg,.jpeg,.png"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file) handlePreviewUpload(file)
+                e.target.value = ''
+              }}
             />
           </div>
 
@@ -155,7 +244,15 @@ export function ReviewPanel({
             <label className="text-xs text-muted-foreground">Category</label>
             <Select
               value={tour.categoryTag}
-              onValueChange={(v) => v && onTourUpdate({ ...tour, categoryTag: v })}
+              onValueChange={(v) => {
+                if (v === '__suggest__') {
+                  setSuggestCategoryOpen(true)
+                  setCategorySuggestSent(false)
+                  setCategorySuggestion('')
+                } else if (v) {
+                  onTourUpdate({ ...tour, categoryTag: v })
+                }
+              }}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select category" />
@@ -166,9 +263,56 @@ export function ReviewPanel({
                     {c.charAt(0).toUpperCase() + c.slice(1)}
                   </SelectItem>
                 ))}
+                <SelectItem value="__suggest__" className="text-primary">
+                  Suggest a category...
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
+
+          {/* Suggest category dialog */}
+          <Dialog open={suggestCategoryOpen} onOpenChange={setSuggestCategoryOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Suggest a new category</DialogTitle>
+                <DialogDescription>
+                  Don&apos;t see the right category? Let us know what you&apos;d like added.
+                </DialogDescription>
+              </DialogHeader>
+              {categorySuggestSent ? (
+                <p className="text-sm text-muted-foreground py-2">
+                  Thanks for your suggestion! We&apos;ll review it.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  <Input
+                    value={categorySuggestion}
+                    onChange={(e) => setCategorySuggestion(e.target.value)}
+                    placeholder="e.g. Architecture, Wildlife, Gastronomy..."
+                    autoFocus
+                  />
+                  <Button
+                    className="w-full"
+                    disabled={!categorySuggestion.trim()}
+                    onClick={() => {
+                      fetch('/api/suggest', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          type: 'category_tag',
+                          suggestion: categorySuggestion.trim(),
+                          tourTitle: tour.title,
+                        }),
+                      }).catch(() => {})
+                      setCategorySuggestSent(true)
+                    }}
+                  >
+                    Submit suggestion
+                  </Button>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
 
           {/* Challenge Level */}
           <div className="flex flex-col gap-1">
@@ -409,6 +553,97 @@ export function ReviewPanel({
             </DialogContent>
           </Dialog>
 
+          {/* Tour Collection */}
+          <div className="flex flex-col gap-1 sm:col-span-2">
+            <label className="text-xs text-muted-foreground">Tour Collection (optional)</label>
+            <Select
+              value={tour.collectionId || '__none__'}
+              onValueChange={(v) => {
+                if (v === '__new__') {
+                  setNewCollectionOpen(true)
+                  setNewCollectionTitle('')
+                  setNewCollectionDesc('')
+                } else if (v === '__none__') {
+                  onTourUpdate({ ...tour, collectionId: '' })
+                } else if (v) {
+                  onTourUpdate({ ...tour, collectionId: v })
+                }
+              }}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue>
+                  {tour.collectionId
+                    ? (collections.find((c) => c._id === tour.collectionId)?.title ?? 'Loading...')
+                      + (tour.collectionId.startsWith('drafts.') ? ' [pending]' : '')
+                    : 'No tour collection'}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__" className="text-muted-foreground">
+                  No tour collection
+                </SelectItem>
+                {collections.map((c) => (
+                  <SelectItem key={c._id} value={c._id}>
+                    {c.title}{c._id.startsWith('drafts.') ? ' [pending]' : ''}
+                  </SelectItem>
+                ))}
+                <SelectItem value="__new__" className="text-primary">
+                  + New tour collection...
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* New collection dialog */}
+          <Dialog open={newCollectionOpen} onOpenChange={setNewCollectionOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>New tour collection</DialogTitle>
+                <DialogDescription>
+                  Group related tours together. This will create a draft tour collection for review.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-muted-foreground">Collection name *</label>
+                  <Input
+                    value={newCollectionTitle}
+                    onChange={(e) => setNewCollectionTitle(e.target.value)}
+                    placeholder="e.g. Kyoto Immersions, Coastal Adventures..."
+                    autoFocus
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-muted-foreground">Description</label>
+                  <Textarea
+                    value={newCollectionDesc}
+                    onChange={(e) => setNewCollectionDesc(e.target.value)}
+                    placeholder="Brief description of this collection..."
+                    rows={2}
+                  />
+                </div>
+                <Button
+                  className="w-full"
+                  disabled={!newCollectionTitle.trim() || creatingCollection}
+                  onClick={async () => {
+                    setCreatingCollection(true)
+                    const created = await onCreateCollection({
+                      title: newCollectionTitle.trim(),
+                      description: newCollectionDesc.trim(),
+                    })
+                    setCreatingCollection(false)
+                    if (created) {
+                      onTourUpdate({ ...tour, collectionId: created._id })
+                      setNewCollectionOpen(false)
+                    }
+                  }}
+                >
+                  {creatingCollection ? 'Creating...' : 'Create draft tour collection'}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
           {/* Duration range */}
           <div className="flex flex-col gap-1">
             <label className="text-xs text-muted-foreground">
@@ -546,28 +781,32 @@ export function ReviewPanel({
       />
 
       {/* Stop list */}
-      <motion.div
-        className="space-y-4"
-        variants={staggerContainer(0.06)}
-        initial="hidden"
-        animate="show"
-      >
-        {tour.stops.map((stop, i) => (
-          <motion.div key={stop.id} variants={staggerChild} transition={spring.gentle}>
-            <StopCard
-              stop={stop}
-              index={i}
-              files={files}
-              onUpdate={(updated) => updateStop(i, updated)}
-              onRemove={(stopId) => {
-                onTourUpdate({ ...tour, stops: tour.stops.filter((s) => s.id !== stopId) })
-              }}
-              onRemoveMedia={onRemoveMedia}
-              onReplaceImage={onReplaceImage}
-              replacingImage={replacingImageStopId === stop.id}
-            />
-          </motion.div>
-        ))}
+      <div className="space-y-4">
+        <AnimatePresence initial={false}>
+          {tour.stops.map((stop, i) => (
+            <motion.div
+              key={stop.id}
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+              transition={spring.smooth}
+              layout
+            >
+              <StopCard
+                stop={stop}
+                index={i}
+                files={files}
+                onUpdate={(updated) => updateStop(i, updated)}
+                onRemove={(stopId) => {
+                  onTourUpdate({ ...tour, stops: tour.stops.filter((s) => s.id !== stopId) })
+                }}
+                onRemoveMedia={onRemoveMedia}
+                onReplaceImage={onReplaceImage}
+                replacingImage={replacingImageStopId === stop.id}
+              />
+            </motion.div>
+          ))}
+        </AnimatePresence>
         <Button
           variant="outline"
           className="w-full"
@@ -585,7 +824,7 @@ export function ReviewPanel({
         >
           + Add stop
         </Button>
-      </motion.div>
+      </div>
     </div>
   )
 }
