@@ -36,6 +36,9 @@ All localStorage access MUST happen in `useEffect`, never during render or `useS
 ### Radix Select (shadcn)
 Use a `'__none__'` sentinel value for "no selection" — never use empty string as value (causes controlled/uncontrolled switch). Render display text explicitly via `<SelectValue>` children, not placeholder — Radix won't resolve dynamic items reliably.
 
+### Animations
+shadcn components (`components/ui/`) have been customized with `motion/react` spring animations. Re-generating via shadcn CLI will overwrite these — re-apply motion integration manually after any regeneration. Shared spring configs live in `lib/motion.ts`.
+
 ### File uploads
 - Files ≤4.5MB: POST to `/api/upload` (multipart FormData)
 - Files >4.5MB: get presigned URL from `/api/presign`, PUT directly to DO Spaces
