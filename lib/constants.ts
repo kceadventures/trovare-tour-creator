@@ -28,10 +28,10 @@ export const FILE_LIMITS = {
 
 export const ACCEPTED_TYPES: Record<string, string[]> = {
   gpx: ['.gpx'],
-  image: ['.jpg', '.jpeg', '.png'],
+  image: ['.jpg', '.jpeg', '.png', '.webp', '.avif'],
   audio: ['.mp3'],
   video: ['.mp4'],
-  text: ['.txt', '.md'],
+  text: ['.txt', '.md', '.docx', '.pdf'],
 }
 
 export const SANITY_PROJECT = '48sx65rc'

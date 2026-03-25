@@ -55,11 +55,42 @@ export function DropZone({ onFilesUploaded, uploading, setUploading }: Props) {
     setDragOver(false)
   }
 
-  function handleDrop(e: DragEvent<HTMLDivElement>) {
+  async function handleDrop(e: DragEvent<HTMLDivElement>) {
     e.preventDefault()
     setDragOver(false)
-    const files = Array.from(e.dataTransfer.files)
-    processFiles(files)
+
+    // Use DataTransferItem API to support directory drops
+    const items = Array.from(e.dataTransfer.items)
+    const entries = items
+      .map((item) => item.webkitGetAsEntry?.())
+      .filter((entry): entry is FileSystemEntry => entry != null)
+
+    if (entries.some((entry) => entry.isDirectory)) {
+      const allFiles = await readEntriesRecursive(entries)
+      processFiles(allFiles)
+    } else {
+      processFiles(Array.from(e.dataTransfer.files))
+    }
+  }
+
+  async function readEntriesRecursive(entries: FileSystemEntry[]): Promise<File[]> {
+    const files: File[] = []
+    for (const entry of entries) {
+      if (entry.isFile) {
+        const file = await new Promise<File>((resolve, reject) =>
+          (entry as FileSystemFileEntry).file(resolve, reject)
+        )
+        files.push(file)
+      } else if (entry.isDirectory) {
+        const reader = (entry as FileSystemDirectoryEntry).createReader()
+        const childEntries = await new Promise<FileSystemEntry[]>((resolve, reject) =>
+          reader.readEntries(resolve, reject)
+        )
+        const childFiles = await readEntriesRecursive(childEntries)
+        files.push(...childFiles)
+      }
+    }
+    return files
   }
 
   function handleInputChange(e: ChangeEvent<HTMLInputElement>) {
@@ -187,10 +218,10 @@ export function DropZone({ onFilesUploaded, uploading, setUploading }: Props) {
         <CardContent className="flex flex-col items-center justify-center py-10 text-center">
           <div className="mb-3 text-4xl">📁</div>
           <p className="text-sm font-medium text-foreground">
-            Drop files here or click to browse
+            Drop files or folders here, or click to browse
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            GPX · JPG/PNG · MP3 · MP4 · TXT/MD
+            GPX · JPG/PNG/WebP · MP3 · MP4 · DOCX/PDF/TXT
           </p>
           <input
             ref={inputRef}

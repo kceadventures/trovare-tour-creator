@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
+import mammoth from 'mammoth'
 import { parseGPX } from '@/lib/gpx'
 import { matchMediaToStops } from '@/lib/media-matcher'
 import { POI_KINDS } from '@/lib/constants'
@@ -86,11 +87,32 @@ export async function POST(req: NextRequest) {
         // Step 3: Read text context (25-30%)
         const textFiles = files.filter(f => f.category === 'text')
         let textContext = ''
+        const documentBlocks: Anthropic.Messages.DocumentBlockParam[] = []
         if (textFiles.length) {
           sendEvent(controller, encoder, { type: 'status', message: `Reading ${textFiles.length} text file(s) for context...`, progress: 27 })
           for (const tf of textFiles) {
-            const res = await fetch(tf.url)
-            textContext += await res.text() + '\n'
+            const name = tf.originalName.toLowerCase()
+            if (name.endsWith('.pdf')) {
+              // Pass PDF as base64 document block for Claude to read natively
+              const res = await fetch(tf.url)
+              const buf = await res.arrayBuffer()
+              const base64 = Buffer.from(buf).toString('base64')
+              documentBlocks.push({
+                type: 'document',
+                source: { type: 'base64', media_type: 'application/pdf', data: base64 },
+              })
+              sendEvent(controller, encoder, { type: 'status', message: `Loaded PDF: ${tf.originalName}`, progress: 28 })
+            } else if (name.endsWith('.docx')) {
+              // Extract text from docx using mammoth
+              const res = await fetch(tf.url)
+              const buf = Buffer.from(await res.arrayBuffer())
+              const result = await mammoth.extractRawText({ buffer: buf })
+              textContext += `--- ${tf.originalName} ---\n${result.value}\n\n`
+              sendEvent(controller, encoder, { type: 'status', message: `Extracted text from: ${tf.originalName}`, progress: 28 })
+            } else {
+              const res = await fetch(tf.url)
+              textContext += await res.text() + '\n'
+            }
           }
         }
 
@@ -125,7 +147,13 @@ Return ONLY valid JSON:
   ]
 }`
 
-        const userMessage = `Here are the stops:\n${stopContext}\n\nDistance: ${distance} miles.\n${textContext ? `\nCreator notes:\n${textContext}` : ''}\n\nSearch the web for real information about each stop before writing.`
+        const userText = `Here are the stops:\n${stopContext}\n\nDistance: ${distance} miles.\n${textContext ? `\nCreator notes:\n${textContext}` : ''}\n\nSearch the web for real information about each stop before writing.`
+
+        // Build message content: document blocks first, then text
+        const userContent: Anthropic.Messages.ContentBlockParam[] = [
+          ...documentBlocks,
+          { type: 'text', text: userText },
+        ]
 
         let aiData: Record<string, unknown> | null = null
 
@@ -135,7 +163,7 @@ Return ONLY valid JSON:
             model: 'claude-sonnet-4-20250514',
             max_tokens: 4096,
             system: systemPrompt,
-            messages: [{ role: 'user', content: userMessage }],
+            messages: [{ role: 'user', content: userContent }],
             tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 10 }],
           })
 
