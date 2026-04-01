@@ -258,14 +258,26 @@ export function ReviewPanel({
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
-                {CATEGORY_TAGS.map((c) => (
-                  <SelectItem key={c} value={c}>
-                    {c.charAt(0).toUpperCase() + c.slice(1)}
-                  </SelectItem>
-                ))}
-                <SelectItem value="__suggest__" className="text-primary">
-                  Suggest a category...
-                </SelectItem>
+                {(() => {
+                  const idx = CATEGORY_TAGS.indexOf(tour.categoryTag as typeof CATEGORY_TAGS[number])
+                  const nearTop = idx >= 0 && idx < CATEGORY_TAGS.length / 2
+                  const action = (
+                    <SelectItem key="__suggest__" value="__suggest__" className="text-primary">
+                      Suggest a category...
+                    </SelectItem>
+                  )
+                  return (
+                    <>
+                      {nearTop && action}
+                      {CATEGORY_TAGS.map((c) => (
+                        <SelectItem key={c} value={c}>
+                          {c.charAt(0).toUpperCase() + c.slice(1)}
+                        </SelectItem>
+                      ))}
+                      {!nearTop && action}
+                    </>
+                  )
+                })()}
               </SelectContent>
             </Select>
           </div>
@@ -365,17 +377,29 @@ export function ReviewPanel({
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="__none__" className="text-muted-foreground">
-                  No region
-                </SelectItem>
-                {regions.map((r) => (
-                  <SelectItem key={r._id} value={r._id}>
-                    {r.title}{r._id.startsWith('drafts.') ? ' [pending]' : ''}
-                  </SelectItem>
-                ))}
-                <SelectItem value="__new__" className="text-primary">
-                  + New region...
-                </SelectItem>
+                {(() => {
+                  const idx = regions.findIndex((r) => r._id === tour.regionId)
+                  const nearTop = idx >= 0 && idx < regions.length / 2
+                  const action = (
+                    <SelectItem key="__new__" value="__new__" className="text-primary">
+                      + New region...
+                    </SelectItem>
+                  )
+                  return (
+                    <>
+                      {nearTop && action}
+                      <SelectItem value="__none__" className="text-muted-foreground">
+                        No region
+                      </SelectItem>
+                      {regions.map((r) => (
+                        <SelectItem key={r._id} value={r._id}>
+                          {r.title}{r._id.startsWith('drafts.') ? ' [pending]' : ''}
+                        </SelectItem>
+                      ))}
+                      {!nearTop && action}
+                    </>
+                  )
+                })()}
               </SelectContent>
             </Select>
           </div>
@@ -468,17 +492,29 @@ export function ReviewPanel({
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="__none__" className="text-muted-foreground">
-                  No provider
-                </SelectItem>
-                {tourProviders.map((p) => (
-                  <SelectItem key={p._id} value={p._id}>
-                    {p.title}{p._id.startsWith('drafts.') ? ' [pending]' : ''}
-                  </SelectItem>
-                ))}
-                <SelectItem value="__new__" className="text-primary">
-                  + New creator...
-                </SelectItem>
+                {(() => {
+                  const idx = tourProviders.findIndex((p) => p._id === tour.tourProviderId)
+                  const nearTop = idx >= 0 && idx < tourProviders.length / 2
+                  const action = (
+                    <SelectItem key="__new__" value="__new__" className="text-primary">
+                      + New creator...
+                    </SelectItem>
+                  )
+                  return (
+                    <>
+                      {nearTop && action}
+                      <SelectItem value="__none__" className="text-muted-foreground">
+                        No provider
+                      </SelectItem>
+                      {tourProviders.map((p) => (
+                        <SelectItem key={p._id} value={p._id}>
+                          {p.title}{p._id.startsWith('drafts.') ? ' [pending]' : ''}
+                        </SelectItem>
+                      ))}
+                      {!nearTop && action}
+                    </>
+                  )
+                })()}
               </SelectContent>
             </Select>
           </div>
@@ -579,17 +615,29 @@ export function ReviewPanel({
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="__none__" className="text-muted-foreground">
-                  No tour collection
-                </SelectItem>
-                {collections.map((c) => (
-                  <SelectItem key={c._id} value={c._id}>
-                    {c.title}{c._id.startsWith('drafts.') ? ' [pending]' : ''}
-                  </SelectItem>
-                ))}
-                <SelectItem value="__new__" className="text-primary">
-                  + New tour collection...
-                </SelectItem>
+                {(() => {
+                  const idx = collections.findIndex((c) => c._id === tour.collectionId)
+                  const nearTop = idx >= 0 && idx < collections.length / 2
+                  const action = (
+                    <SelectItem key="__new__" value="__new__" className="text-primary">
+                      + New tour collection...
+                    </SelectItem>
+                  )
+                  return (
+                    <>
+                      {nearTop && action}
+                      <SelectItem value="__none__" className="text-muted-foreground">
+                        No tour collection
+                      </SelectItem>
+                      {collections.map((c) => (
+                        <SelectItem key={c._id} value={c._id}>
+                          {c.title}{c._id.startsWith('drafts.') ? ' [pending]' : ''}
+                        </SelectItem>
+                      ))}
+                      {!nearTop && action}
+                    </>
+                  )
+                })()}
               </SelectContent>
             </Select>
           </div>
@@ -790,7 +838,7 @@ export function ReviewPanel({
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0, marginBottom: 0 }}
               transition={spring.smooth}
-              layout
+              className="overflow-hidden"
             >
               <StopCard
                 stop={stop}

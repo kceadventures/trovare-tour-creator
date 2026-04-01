@@ -67,7 +67,7 @@ export function RoutePreview({ routePoints, stops }: RoutePreviewProps) {
         <motion.path
           d={path}
           fill="none"
-          stroke="#1D9E75"
+          stroke="#045554"
           strokeWidth="2.5"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -87,7 +87,7 @@ export function RoutePreview({ routePoints, stops }: RoutePreviewProps) {
             transition={{ ...spring.snappy, delay: 0.3 + i * 0.1 }}
             style={{ transformOrigin: `${cx}px ${cy}px` }}
           >
-            <circle cx={cx} cy={cy} r="10" fill="#1D9E75" />
+            <circle cx={cx} cy={cy} r="10" fill="#045554" />
             <text
               x={cx}
               y={cy + 4}

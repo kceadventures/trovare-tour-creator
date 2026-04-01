@@ -226,14 +226,26 @@ export function StopCard({ stop, index, files, onUpdate, onRemove, onRemoveMedia
               <SelectValue placeholder="Select type" />
             </SelectTrigger>
             <SelectContent>
-              {POI_KINDS.map((k) => (
-                <SelectItem key={k} value={k}>
-                  {camelToReadable(k)}
-                </SelectItem>
-              ))}
-              <SelectItem value="__suggest__" className="text-primary">
-                Suggest a type...
-              </SelectItem>
+              {(() => {
+                const idx = POI_KINDS.indexOf(stop.kind as typeof POI_KINDS[number])
+                const atBottom = idx >= POI_KINDS.length / 2
+                const action = (
+                  <SelectItem key="__suggest__" value="__suggest__" className="text-primary">
+                    Suggest a type...
+                  </SelectItem>
+                )
+                return (
+                  <>
+                    {atBottom && action}
+                    {POI_KINDS.map((k) => (
+                      <SelectItem key={k} value={k}>
+                        {camelToReadable(k)}
+                      </SelectItem>
+                    ))}
+                    {!atBottom && action}
+                  </>
+                )
+              })()}
             </SelectContent>
           </Select>
         </div>

@@ -555,7 +555,7 @@ export default function Home() {
             className="space-y-6"
           >
             <div className="text-center">
-              <h1 className="text-2xl font-bold">Create a Tour</h1>
+              <h1 className="font-heading text-2xl font-bold tracking-tight">Create a Tour</h1>
               <p className="mt-1 text-sm text-muted-foreground">
                 Choose how you want to build your tour.
               </p>
@@ -676,7 +676,7 @@ export default function Home() {
             className="space-y-6"
           >
             <div>
-              <h1 className="text-2xl font-bold">Upload a Tour</h1>
+              <h1 className="font-heading text-2xl font-bold tracking-tight">Upload a Tour</h1>
               <p className="mt-1 text-sm text-muted-foreground">
                 Drop your GPX, photos, audio, and notes below.
               </p>
@@ -725,7 +725,7 @@ export default function Home() {
             {screen === 'review' && (
               <>
                 <div>
-                  <h1 className="text-2xl font-bold">Create New Tour</h1>
+                  <h1 className="font-heading text-2xl font-bold tracking-tight">Create New Tour</h1>
                   <p className="mt-1 text-sm text-muted-foreground">
                     Check and edit the generated tour before publishing.
                   </p>
